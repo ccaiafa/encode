@@ -679,6 +679,13 @@ switch param
     val     = reshape(feGetRep(fe,'dsigdemeaned'), nBvecs, nVoxels);
     val     = val(:,feGet(fe,'return voxel indices',varargin));
     
+  case {'dsigmeasuredbyvoxel','dsigmeasuredvox'}
+
+    nBvecs  = feGetRep(fe,'nBvecs');
+    nVoxels = feGet(fe,'n voxels');
+    val     = reshape(feGetRep(fe,'dsigmeasured'), nBvecs, nVoxels);
+    val     = val(:,feGet(fe,'return voxel indices',varargin));    
+    
   case {'dsigfullbyvoxel','dsigfullvox'}
     % Full (measured) signal in each voxel
     %
@@ -698,6 +705,13 @@ switch param
     % RMSE = feGetRep(fe,'vox rmse',vxIndex)
     measured  = feGetRep(fe,'dsigdemeaned by voxel');
     predicted = feGet(fe,'pSig f vox');
+    val       = sqrt(mean((measured - predicted).^2,1));
+    val       = val(feGet(fe,'return voxel indices',varargin));
+    
+  case {'voxelrmsewithmean','voxrmsewithmean'}
+    % A volume of RMSE values
+    measured  = feGetRep(fe,'dsigmeasured by voxel');
+    predicted = feGet(fe,'pSig f vox with mean');
     val       = sqrt(mean((measured - predicted).^2,1));
     val       = val(feGet(fe,'return voxel indices',varargin));
     
@@ -722,6 +736,13 @@ switch param
     rmseModel = feGetRep(fe,'vox rmse');
     val       = rmseModel ./ rmseData;
     val       = val(feGet(fe,'return voxel indices',varargin));
+    
+  case {'voxelrmseratiowithmean','voxrmseratiowithmean'}
+
+    rmseData  = feGetRep(fe,'vox rmse data with mean');
+    rmseModel = feGetRep(fe,'vox rmse with mean');
+    val       = rmseModel ./ rmseData;
+    val       = val(feGet(fe,'return voxel indices',varargin));   
   
   case {'prmseratio','proportionrmseratio'}      
     % The probability of a ratio-value in the volume.
@@ -762,6 +783,13 @@ switch param
     measured2 = feGetRep(fe,'dsigdemeaned by voxel');
     val       = sqrt(mean((measured - measured2).^2,1));
     val       = val(feGet(fe,'return voxel indices',varargin));
+    
+  case {'voxelrmsedatawithmean','voxrmsedatawithmean'}
+    % A volume of RMSE values from data set 1 to data set 2
+    measured  =    fe.life.diffusion_signal_img';
+    measured2 = feGetRep(fe,'dsig measured by voxel');
+    val       = sqrt(mean((measured - measured2).^2,1));
+    val       = val(feGet(fe,'return voxel indices',varargin));    
 
   case {'voxelrmsetest','voxrmsetest'}
     % A volume of RMSE values with a subset of fibers' weights set to 0.

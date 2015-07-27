@@ -3,7 +3,7 @@ function out = bbnnls_GLNXA64(M, b, x0, opt)
 % This is a modified version of BBNNLS code originally written by Suvrit Sra, Dongmin Kim
 % This version accept as parameter a factorization of matrix A which is a
 % structure M containing:
-%       1) The Dictionary M.DictSig;
+%       1) The Dictionary M.D_demean;
 %       2) A sparse 3D array M.Phi with size [nFibers,nAtoms,Nvoxels]
 % The modification was written by C. Caiafa (2015)
 
@@ -124,7 +124,7 @@ end
 % passed back to the calling routine, else it will fail!
 %function [step out] = computeBBStep(A, b, out)
 function [step out] = computeBBStep(A, b, out)
-    [nTheta]  = size(A.DictSig,1);
+    [nTheta]  = size(A.D_demean,1);
     [nAtoms] = size(A.Phi,1);  
     [nFibers] = size(A.Phi,3); %feGet(fe,'nfibers');
     [nVoxels] = size(A.Phi,2); %feGet(fe,'nvoxels');    
@@ -135,7 +135,7 @@ function [step out] = computeBBStep(A, b, out)
 
     %Ag = A*out.oldg; % A*oldg
     Ag = M_times_w(A,out.oldg); % A*oldg 
-    %Ag = M_times_w_LOOP_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,out.oldg,nTheta,nVoxels);
+    %Ag = M_times_w_LOOP_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,out.oldg,nTheta,nVoxels);
     %Agn = M_times_w_par(A,out.oldg); % A*oldg 
     
     
@@ -147,13 +147,13 @@ function [step out] = computeBBStep(A, b, out)
         
         %Ag0 = Ag;
 %       Ag = A'*Ag;         
-       %Ag = Mtransp_times_b_NOloop(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]));
-       %Ag = Mtransp_times_b_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]),nFibers); % MEX default compiler version
-       Ag = Mtransp_times_b_mex_v2015a_Intel(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]),nFibers); % MEX Intel compiler version
-       %Ag = Mtransp_times_b_mex_oIcc_oMan(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]),nFibers);
+       %Ag = Mtransp_times_b_NOloop(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ag,[nTheta,nVoxels]));
+       %Ag = Mtransp_times_b_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ag,[nTheta,nVoxels]),nFibers); % MEX default compiler version
+       Ag = Mtransp_times_b_mex_v2015a_Intel(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ag,[nTheta,nVoxels]),nFibers); % MEX Intel compiler version
+       %Ag = Mtransp_times_b_mex_oIcc_oMan(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ag,[nTheta,nVoxels]),nFibers);
        
-       %       Agn = Mtransp_times_b_new(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag0,[nTheta,nVoxels]));
-%       Ag = Mtransp_times_b_par(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]),nFibers);
+       %       Agn = Mtransp_times_b_new(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ag0,[nTheta,nVoxels]));
+%       Ag = Mtransp_times_b_par(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ag,[nTheta,nVoxels]),nFibers);
 %        Ag = Mtransp_times_b(A,Ag);
         
         Ag(gp) = 0;
@@ -165,24 +165,24 @@ end
 % and A'*y for appropriate x and y
 function [f g] = funcGrad(A, b, x)    
     [nFibers] = size(A.Phi,3); %feGet(fe,'nfibers');
-    [nTheta]  = size(A.DictSig,1);
-    [nAtoms] = size(A.DictSig,2); %feGet(fe,'natoms');
+    [nTheta]  = size(A.D_demean,1);
+    [nAtoms] = size(A.D_demean,2); %feGet(fe,'natoms');
     [nVoxels] = size(A.Phi,2); %feGet(fe,'nvoxels');    
     
     %Ax = A*x - b;
     Ax = M_times_w(A,x) - b;
-    %Ax = M_times_w_LOOP_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,x,nTheta,nVoxels) - b;
+    %Ax = M_times_w_LOOP_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,x,nTheta,nVoxels) - b;
     
     f = 0.5*norm(Ax)^2;
     if (nargout > 1)
 %     g = A'*Ax;
 %     g =
-%     Mtransp_times_b_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ax,[nTheta,nVoxels]),nFibers);
+%     Mtransp_times_b_mex(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ax,[nTheta,nVoxels]),nFibers);
 %     % MEX default compiler version
-     g = Mtransp_times_b_mex_v2015a_Intel(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ax,[nTheta,nVoxels]),nFibers);% MEX Intel compiler version     
-     %g = Mtransp_times_b_mex_oIcc_oMan(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ax,[nTheta,nVoxels]),nFibers);
+     g = Mtransp_times_b_mex_v2015a_Intel(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ax,[nTheta,nVoxels]),nFibers);% MEX Intel compiler version     
+     %g = Mtransp_times_b_mex_oIcc_oMan(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ax,[nTheta,nVoxels]),nFibers);
      
-     %g = Mtransp_times_b_NOloop(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ax,[nTheta,nVoxels]));
+     %g = Mtransp_times_b_NOloop(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.D_demean,reshape(Ax,[nTheta,nVoxels]));
 %      g = Mtransp_times_b(A,Ax);
     end
 end

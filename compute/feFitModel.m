@@ -1,11 +1,11 @@
-function [fit, w, R2] = feFitModel(M,dSig,fitMethod)
+function [fit, w, R2] = feFitModel(M,dSig,dSig_demeaned,S0,fitMethod)
 % 
 % feFitModel() function in LiFE but restricted to the
 % 
 % BBNNLS algorithm and using the Factorization model.
 % M is the factorization model composed by:
 %
-%   M.DictSig    Dictionary
+%   M.D_demean    Dictionary
 %   
 %  Copyright (2015), Franco Pestilli (Indiana Univ.) - Cesar F. Caiafa (CONICET)
 %  email: pestillifranco@gmail.com and ccaiafa@gmail.com
@@ -15,11 +15,11 @@ function [fit, w, R2] = feFitModel(M,dSig,fitMethod)
 % Fit the LiFE model.
 %
 % Finds the weights for each fiber to best predict the directional
-% diffusion signal (dSig)
+% diffusion signal (dSig_demeaned)
 %
-%  fit = feFitModel(M,dSig,fitMethod)
+%  fit = feFitModel(M,dSig_demeaned,S0,fitMethod)
 %
-% dSig:  The diffusion weighted signal measured at each
+% dSig_demeaned:  The diffusion weighted signal measured at each
 %        voxel in each direction. These are extracted from 
 %        the dwi data at some white-matter coordinates.
 % M:     The LiFE difusion model matrix, constructed
@@ -44,7 +44,7 @@ function [fit, w, R2] = feFitModel(M,dSig,fitMethod)
 % for each voxel is predicted as the weighted sum of predictions from each
 % fibers that passes through a voxel plus an isotropic (CSF) term.
 %
-% In addition to M, we typically return dSig, which is the signal measured
+% In addition to M, we typically return dSig_demeaned, which is the signal measured
 % at each voxel in each direction.  These are extracted from the dwi data
 % and knowledge of the roiCoords.
 
@@ -53,28 +53,29 @@ function [fit, w, R2] = feFitModel(M,dSig,fitMethod)
 mycomputer = computer();
 release = version('-release');
 
+[nFibers] = size(M.Phi,3); %feGet(fe,'nfibers');
+[nTheta]  = size(M.D_demean,1);
+[nAtoms] = size(M.D_demean,2); %feGet(fe,'natoms');
+[Nvoxels] = size(M.Phi,2); %feGet(fe,'nvoxels');
+
 switch fitMethod
    case {'bbnnls'}
-    [nFibers] = size(M.Phi,3); %feGet(fe,'nfibers');
-    %[nTheta]  = size(M.DictSig,1);
-    [nAtoms] = size(M.DictSig,2); %feGet(fe,'natoms');
-    [Nvoxels] = size(M.Phi,2); %feGet(fe,'nvoxels');
     
     tic
     fprintf('\nLiFE: Computing least-square minimization with BBNNLS...\n')
     opt = solopt;
-    opt.maxit = 5000;
+    opt.maxit = 500;
     opt.use_tolo = 1;
     
     switch strcat(mycomputer,'_',release)
         case {'GLNXA64_2015a'}
-        out_data = bbnnls_GLNXA64(M,dSig,zeros(nFibers,1),opt);
-        case {'MACI64_2014b'}
-        out_data = bbnnls_MACI64(M,dSig,zeros(nFibers,1),opt);
+        out_data = bbnnls_GLNXA64(M,dSig_demeaned,zeros(nFibers,1),opt);
+        case {'MACI64_2014b','MACI64_2015a'}
+        out_data = bbnnls_MACI64(M,dSig_demeaned,zeros(nFibers,1),opt);
         otherwise
-        sprintf('WARNING: currently LiFE is optimized for an efficient usage of memory \n using the Sparse Tucker Decomposition aproach (Caiafa&Pestilli, 2015) \n ONLY for Linux (MatlabR2015a) and MacOS (MatlabR2014b). \n If you have a different system or version you can still \n use the old version of LiFE (memory intensive). \n\n')
+        sprintf('WARNING: currently LiFE is optimized for an efficient usage of memory \n using the Sparse Tucker Decomposition aproach (Caiafa&Pestilli, 2015) \n ONLY for Linux (MatlabR2015a) and MacOS (Matlab R2014b/R2015a). \n If you have a different system or version you can still \n use the old version of LiFE (memory intensive). \n\n')
         sprintf('\n Starting using old version of LiFE...\n')
-        out_data = bbnnls_OLD(M.MmatrixM,dSig,zeros(nFibers,1),opt);
+        out_data = bbnnls_OLD(M.MmatrixM,dSig_demeaned,zeros(nFibers,1),opt);
     end
     fprintf('BBNNLS status: %s\nReason: %s\n',out_data.status,out_data.termReason);
     w = out_data.x;
@@ -93,8 +94,32 @@ switch fitMethod
      error('Cannot fit LiFE model using method: %s.\n',fitMethod);
 end
 
+%% Compute isotropic weight per voxel (w0)
+w0 = ttv(M.Phi,w,3);
+w0 = double(sptenmat(w0,1));
+w0 = ones(1,Nvoxels) - sum(w0,1)./S0';
+w0 = w0';
+
+%% Fit isotropic term per voxel (A0)
+y = ttv(M.Phi,w,3); % This is memory efficient version of above
+% The following makes ans \times_1 Dic
+if nnz(y)
+    y = ttm(y,M.Dict,1);
+else
+    y = sptensor([size(M.Dict,1),size(y,2)]); % In case empty tensor
+end
+y = tenmat(y,1); % sptensor -> tenmat
+y = double(y); % tenmat -> sparse matrix
+
+y = dSig - y;
+y = y./repmat((w0.*S0)',nTheta,1);
+y(y<0) = 0;
+A0 = -log(mean(y))';
+
 % Save output structure.
 fit.weights             = w;
 fit.params.fitMethod    = fitMethod;
+fit.w0                  = w0;
+fit.A0                  = A0;
 
 end
