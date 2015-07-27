@@ -65,7 +65,7 @@ vals = Phi.vals;
 
 nVoxels = length(roi_ind);
 a = A(:);
-vals = vals./a(sub2ind([nVoxels,nFibers],vox,fib));
+vals = vals./a(sub2ind([nVoxels,nFibers],vox,fib)); % this applies a normalization within single voxels, i.e. each diffusion contribution is divided by the number of nodes within each voxel.
 
 Phi = sptensor(Phi.subs,vals,size(Phi));
 
