@@ -1,4 +1,4 @@
-function [fh, fe] = life_BD_demo()
+function [fh, fe] = life_demo()
 %% Example of initialization and fitting of the Big Data (BD) LiFE model (LiFE-BD)
 % This demo function illustrates how to:
 %  - A - Set up a LiFE-BD structure, identified as 'fe' (fascicle evaluation) in
