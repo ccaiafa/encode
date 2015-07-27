@@ -523,7 +523,7 @@ switch param
     % bval = feGet(fe,'bvals')
     val = fe.life.bvals;
     
-  case {'diffusionsignalinvoxel','dsiinvox','dsigvox','dsigmeasuredvoxel'}
+  case {'diffusionsignalinvoxel','dsiinvox','dsigvox','dSig_demeaned'}
     % Returns a nVoxels X nBvecs array of measured diffusion signal
     %
     % val = feGet(fe,'dsiinvox');
@@ -691,92 +691,92 @@ switch param
 %       val = feBuildSparseBlockDiag(feGet(fe,'nBvecs'),length(feGet(fe,'voxelsindices',varargin)));
 %     end
     
-  case {'voxel2fnpair','voxel2fibernodepair','v2fnp'}
-    % Pairing of fibers and nodes in each voxel.
-    %
-    % v2fnp = feGet(fe,'v2fnp');
-    if isempty(fe.life.voxel2FNpair)
-      fprintf('[%s] fe.life.voxel2FNpair is empty, can be computed as: \nfe = feSet(fe,''v2fnp'',feGet(fe,''fg img''),''v2fn'',feGet(fe,''roi coords'')',mfilename);
-      return
-    end
-    val = fe.life.voxel2FNpair;
+%   case {'voxel2fnpair','voxel2fibernodepair','v2fnp'}
+%     % Pairing of fibers and nodes in each voxel.
+%     %
+%     % v2fnp = feGet(fe,'v2fnp');
+%     if isempty(fe.life.voxel2FNpair)
+%       fprintf('[%s] fe.life.voxel2FNpair is empty, can be computed as: \nfe = feSet(fe,''v2fnp'',feGet(fe,''fg img''),''v2fn'',feGet(fe,''roi coords'')',mfilename);
+%       return
+%     end
+%     val = fe.life.voxel2FNpair;
+%     
+%   case {'tensors','fibers tensors'}
+%     % Tensors computed for each node and fiber in a set of voxels.
+%     %
+%     % t = feGet(fe,'tensors')
+%     % t = feGet(fe,'tensors',voxelsIndices);
+%     % t = feGet(fe,'tensors',coords);
+%     if isempty(varargin)
+%       val = fe.life.fibers.tensors;
+%     else
+%       vv = feGet(fe,'voxelsindices',varargin);
+%       val = cell(size(vv));
+%       for ff = 1:length(vv)
+%         val{ff} = fe.life.fibers.tensors{vv(ff)};
+%       end
+%     end
     
-  case {'tensors','fibers tensors'}
-    % Tensors computed for each node and fiber in a set of voxels.
-    %
-    % t = feGet(fe,'tensors')
-    % t = feGet(fe,'tensors',voxelsIndices);
-    % t = feGet(fe,'tensors',coords);
-    if isempty(varargin)
-      val = fe.life.fibers.tensors;
-    else
-      vv = feGet(fe,'voxelsindices',varargin);
-      val = cell(size(vv));
-      for ff = 1:length(vv)
-        val{ff} = fe.life.fibers.tensors{vv(ff)};
-      end
-    end
-    
-  case {'voxeltensors','voxtensors','voxq'}
-    % Get all the tensors in a signle voxel
-    %
-    % val = feGet(fe,'voxtensors',voxelIndex)
-    % val = feGet(fe,'voxtensors',coord)
-    
-    % Index for the voxel
-    vv = feGet(fe,'voxelsindices',varargin);
-    
-    % The indexes of the voxeles used, to build LiFE.
-    usedVoxels = feGet(fe,'usedVoxels');
-    voxIndex   = usedVoxels(vv);
-    nNodes     = feGet(fe,'nNodes');
-    
-    % Get the tensors for each node in each fiber going through this voxel:
-    val = zeros(nNodes(voxIndex), 9); % Allocate space for all the tensors (9 is for the 3 x 3 tensor components)
-    for ii = 1:nNodes(voxIndex)           % Get the tensors
-      val(ii,:) = fe.life.fibers.tensors{fe.life.voxel2FNpair{voxIndex}(ii,1)} ...
-        (fe.life.voxel2FNpair{voxIndex}(ii,2),:);
-    end
-    
-  case {'nnodes','numofnodes'}
-    % Total number of nodes in each voxel The voxel2FN pairs are row size
-    % equals number of nodes and column size is always 2. The entries of
-    % the first column are the fiber number. The entries in the second
-    % column are the node of the fiber inside the voxel.
-    %
-    % val = feGet(fe,'n nodes');
-    % val = feGet(fe,'n nodes',voxelsIndices);
-    % val = feGet(fe,'n nodes',coords);
-    if ~isempty(fe.life.voxel2FNpair)
-        [val, ~] = cellfun(@size,fe.life.voxel2FNpair);
-        val      = val(feGet(fe,'voxelsindices',varargin));
-    end
+%   case {'voxeltensors','voxtensors','voxq'}
+%     % Get all the tensors in a signle voxel
+%     %
+%     % val = feGet(fe,'voxtensors',voxelIndex)
+%     % val = feGet(fe,'voxtensors',coord)
+%     
+%     % Index for the voxel
+%     vv = feGet(fe,'voxelsindices',varargin);
+%     
+%     % The indexes of the voxeles used, to build LiFE.
+%     usedVoxels = feGet(fe,'usedVoxels');
+%     voxIndex   = usedVoxels(vv);
+%     nNodes     = feGet(fe,'nNodes');
+%     
+%     % Get the tensors for each node in each fiber going through this voxel:
+%     val = zeros(nNodes(voxIndex), 9); % Allocate space for all the tensors (9 is for the 3 x 3 tensor components)
+%     for ii = 1:nNodes(voxIndex)           % Get the tensors
+%       val(ii,:) = fe.life.fibers.tensors{fe.life.voxel2FNpair{voxIndex}(ii,1)} ...
+%         (fe.life.voxel2FNpair{voxIndex}(ii,2),:);
+%     end
+%     
+%   case {'nnodes','numofnodes'}
+%     % Total number of nodes in each voxel The voxel2FN pairs are row size
+%     % equals number of nodes and column size is always 2. The entries of
+%     % the first column are the fiber number. The entries in the second
+%     % column are the node of the fiber inside the voxel.
+%     %
+%     % val = feGet(fe,'n nodes');
+%     % val = feGet(fe,'n nodes',voxelsIndices);
+%     % val = feGet(fe,'n nodes',coords);
+%     if ~isempty(fe.life.voxel2FNpair)
+%         [val, ~] = cellfun(@size,fe.life.voxel2FNpair);
+%         val      = val(feGet(fe,'voxelsindices',varargin));
+%     end
 
-  case {'numberofuniquefibersbyvoxel','uniquefnum'}
-    % Return the total number of fibers for all the voxels or in a set of
-    % voxels
-    %
-    % nFibers = feGet(fe,'uniquefnum');           % all the voxels
-    % nFibers = feGet(fe,'uniquefnum',[1 2 3 4]); % for some the voxels,
-    %                                             % specified by indexes
-    % nFibers = feGet(fe,'uniquefnum',coords);    % for some the voxels,
-    %                                             % specified by coordinates
-    val = fe.life.fibers.unique.num(feGet(fe,'voxelsindices',varargin));
+%   case {'numberofuniquefibersbyvoxel','uniquefnum'}
+%     % Return the total number of fibers for all the voxels or in a set of
+%     % voxels
+%     %
+%     % nFibers = feGet(fe,'uniquefnum');           % all the voxels
+%     % nFibers = feGet(fe,'uniquefnum',[1 2 3 4]); % for some the voxels,
+%     %                                             % specified by indexes
+%     % nFibers = feGet(fe,'uniquefnum',coords);    % for some the voxels,
+%     %                                             % specified by coordinates
+%     val = fe.life.fibers.unique.num(feGet(fe,'voxelsindices',varargin));
     
-  case {'indextouniquefibersbyvoxel','uniquef'}
-    % Return the indexes of the fibers for all the voxels or in a set of
-    % voxels.
-    %
-    % idxFibers = feGet(fe,'uniquef');           % all the voxels
-    % idxFibers = feGet(fe,'uniquef',[1 2 3 4]); % for some the voxels,
-    %                                            % specified by indexes
-    % idxFibers = feGet(fe,'uniquef',coords);    % for some the voxels,
-    %                                            % specified by coordinates
-    vxIndex = feGet(fe,'voxels indices',varargin);
-    val = cell(length(vxIndex),1);
-    for ii = 1:length(vxIndex)
-      val{ii} = fe.life.fibers.unique.index{vxIndex(ii)};
-    end
+%   case {'indextouniquefibersbyvoxel','uniquef'}
+%     % Return the indexes of the fibers for all the voxels or in a set of
+%     % voxels.
+%     %
+%     % idxFibers = feGet(fe,'uniquef');           % all the voxels
+%     % idxFibers = feGet(fe,'uniquef',[1 2 3 4]); % for some the voxels,
+%     %                                            % specified by indexes
+%     % idxFibers = feGet(fe,'uniquef',coords);    % for some the voxels,
+%     %                                            % specified by coordinates
+%     vxIndex = feGet(fe,'voxels indices',varargin);
+%     val = cell(length(vxIndex),1);
+%     for ii = 1:length(vxIndex)
+%       val{ii} = fe.life.fibers.unique.index{vxIndex(ii)};
+%     end
     
   case {'numberoftotalfibersbyvoxels','totfnum'}
     % Return the total number of fibers for all the voxels or in a set of
@@ -809,10 +809,11 @@ switch param
     %
     %val = size(fe.life.fibers,2);
     val = size(fe.fg.fibers,1);
+    %val = size(fe.life.M.Phi,3);
     
   case {'natoms'}
     % Return the number of atoms in the dictionary
-    val = size(fe.life.M.DictSig,2);  
+    val = size(fe.life.M.D_demean,2);  
 
   case {'orient'}
     % Return the number of atoms in the dictionary
@@ -968,7 +969,7 @@ switch param
       val(feGet(fe,'voxel rows',vv)) = dSig(feGet(fe,'voxel rows',voxelList(vv)));
     end
     
-  case {'psigfiber', 'fiberpsig','fiberpredicted','dsigpredictedfiber'}
+  case {'psigfiberdemeaned', 'fiberpsigdemeaned','fiberpredicteddemeaned','dsigpredictedfiberdemeaned'}
     % Predicted signal of fiber alone (demeaned).
     %
     % pSig = feGet(fefeGet(fe,'fiber weights','pSig fiber');
@@ -983,22 +984,36 @@ switch param
       val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
     end
     
-  case {'uniquefibersindicesinroi'}
-    % Find the unique fibers indices in the FE roi.
-    % Thisis necessary sometimes after changing the number of voxels in an
-    % FE structure, as it is performed by feConnectomeReduceVoxels.m
-    %
-    % FibInRoi = feGet(fe,'uniquefibersinroi');
-    
-    % Get all the unique fibers in each voxel
-    uniquefvx = fefgGet(feGet(fe,'fibers img'), ...
-                        'uniquefibersinvox',     ...
-                        feGet(fe,'roi coords'));
-    val = [];
-    for ivx = 1:length(uniquefvx)
-        val = [val; uniquefvx{ivx}];
+  case {'psigfiberwithmean'}
+    % Predicted signal of fiber alone and isotropic term.   
+    val = M_times_w_with_mean(feGet(fe,'Mfiber'),feGet(fe,'fiber weights'));
+    sigpervox = (fe.life.fit.w0).*(fe.life.diffusion_S0_img).*exp(-fe.life.fit.A0);
+    Ndir = feGet(fe,'nbvecs');
+    Nvoxel = feGet(fe,'nvoxels');
+    val = reshape(val,[Ndir,Nvoxel]) + repmat(sigpervox',Ndir,1);
+    if ~isempty(varargin)
+      % voxelIndices     = feGet(fe,'voxelsindices',varargin);
+      % voxelRowsToKeep  = feGet(fe,'voxel rows',voxelIndices);
+      % val           = val(voxelRowsToKeep,:);
+      val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
     end
-    val = unique(val);
+
+%   case {'uniquefibersindicesinroi'}
+%     % Find the unique fibers indices in the FE roi.
+%     % Thisis necessary sometimes after changing the number of voxels in an
+%     % FE structure, as it is performed by feConnectomeReduceVoxels.m
+%     %
+%     % FibInRoi = feGet(fe,'uniquefibersinroi');
+%     
+%     % Get all the unique fibers in each voxel
+%     uniquefvx = fefgGet(feGet(fe,'fibers img'), ...
+%                         'uniquefibersinvox',     ...
+%                         feGet(fe,'roi coords'));
+%     val = [];
+%     for ivx = 1:length(uniquefvx)
+%         val = [val; uniquefvx{ivx}];
+%     end
+%     val = unique(val);
     
   case {'weightsinroi'}
     % Find the weights of the fibers in a specified volume.
@@ -1219,7 +1234,7 @@ switch param
     %
     % rmse = feGet(fe,'rmse')
     val = sqrt(mean((feGet(fe,'diffusion signal demeaned') - ...
-      feGet(fe,'pSig fiber')).^2));
+      feGet(fe,'pSig fiber demeaned')).^2));
   
   case {'totalrmsevoxelwise'}
     % Root mean squared error of the LiFE fit to the whole data from a
@@ -1233,7 +1248,7 @@ switch param
     % Residual signal fiber prediction - measured_demeaned.
     %
     % res = feGet(fe,'res sig fiber')
-    val = (feGet(fe,'dsigdemeaned')    - feGet(fe,'psig fiber'));
+    val = (feGet(fe,'dsigdemeaned')    - feGet(fe,'psig fiber demeaned'));
     if ~isempty(varargin)
       % voxelIndices     = feGet(fe,'voxelsindices',varargin);
       % voxelRowsToKeep  = feGet(fe,'voxel rows',voxelIndices);
@@ -1282,7 +1297,7 @@ switch param
     % predicted = feGet(fe,'psig fiber');
     % measured  = feGet(fe,'dsigdemeaned');
     % val = (measured_full - predicted demeaned);
-    val = (feGet(fe,'dsig full')' - feGet(fe,'psig fiber')); 
+    val = (feGet(fe,'dsig full')' - feGet(fe,'psig fiber demeaned')); 
     
     if ~isempty(varargin)
       % voxelIndices     = feGet(fe,'voxelsindices',varargin);
@@ -1303,8 +1318,16 @@ switch param
     % pSig = feGet(fe, 'pSig fiber by voxel',voxelIndex);
     nBvecs  = feGet(fe,'nBvecs');
     nVoxels = feGet(fe,'n voxels');
-    val     = reshape(feGet(fe,'pSig fiber'), nBvecs, nVoxels);
+    val     = reshape(feGet(fe,'pSig fiber demeaned'), nBvecs, nVoxels);
     val     = val(:,feGet(fe,'return voxel indices',varargin));
+    
+  case {'predictedfibersignalvoxelwithmean','psigfvoxwithmean'}
+    % Predicted signal by the fiber model including isotropic term in a set of voxels.
+
+    nBvecs  = feGet(fe,'nBvecs');
+    nVoxels = feGet(fe,'n voxels');
+    val     = reshape(feGet(fe,'pSig fiber with mean'), nBvecs, nVoxels);
+    val     = val(:,feGet(fe,'return voxel indices',varargin));    
     
   case {'predictedfullsignalvoxel','psigfullvox'}
     % Predicted signal by the full model in a set of voxeles.
@@ -1416,6 +1439,13 @@ switch param
     predicted = feGet(fe,'pSig f vox');
     val       = sqrt(mean((measured - predicted).^2,1));
     val       = val(feGet(fe,'voxelsindices',varargin));
+    
+  case {'voxelrmsewithmean','voxrmsewithmean'}
+
+    measured  = fe.life.diffusion_signal_img';
+    predicted = feGet(fe,'pSig f vox with mean');
+    val       = sqrt(mean((measured - predicted).^2,1));
+    val       = val(feGet(fe,'voxelsindices',varargin));    
    
   case {'voxelrmsevoxelwise','voxrmsevoxelwise'}
     % A volume of RMSE values optained with the voxel-wise (voxelwise) fit.

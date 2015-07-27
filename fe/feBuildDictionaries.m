@@ -12,7 +12,7 @@ function fe = feBuildDictionaries(fe,Nphi,Ntheta)
 %  email: pestillifranco@gmail.com and ccaiafa@gmail.com
 
 tic
-fprintf(['\n[%s] Computing demeaned difussivities Dictionary in a (',num2str(Nphi),'x',num2str(Ntheta),')-grid', ' ...'],mfilename); 
+fprintf(['\n[%s] Computing demeaned and non-demeaned difussivities dictionaries in a (',num2str(Nphi),'x',num2str(Ntheta),')-grid', ' ...'],mfilename); 
 fprintf('took: %2.3fs.\n',toc)
 
 % Compute orientation vectors
