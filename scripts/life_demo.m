@@ -65,7 +65,8 @@ t1File        = fullfile(lifeDemoDataPath('anatomy'),  'life_demo_anatomy_t1w_st
 %% (1) Evaluate the Probabilistic CSD-based connectome.
 % We will analyze first the CSD-based probabilistic tractography
 % connectome.
-prob.tractography = 'Probabilistic';
+prob_demeaned.tractography = 'Probabilistic';
+prob_with_mean.tractography = 'Probabilistic';
 fgFileName    = fullfile(lifeDemoDataPath('tractography'), ...
                 'life_demo_mrtrix_csd_lmax10_probabilistic.mat');
 
@@ -154,7 +155,9 @@ p.coords = feGet(fe_prob,'roi coords');
 %% (2) Evaluate the Deterministic tensor-based connectome.
 % We will now analyze the tensor-based Deterministic tractography
 % connectome.
-det.tractography = 'Deterministic';
+det_demeaned.tractography = 'Deterministic';
+det_with_mean.tractography = 'Deterministic';
+
 fgFileName    = fullfile(lifeDemoDataPath('tractography'), ...
                 'life_demo_mrtrix_tensor_deterministic.mat');
 
@@ -187,26 +190,26 @@ fe_det = feSet(fe_det,'fit',feFitModel(feGet(fe_det,'model'),feGet(fe_det,'diffu
 %% (2.3) Extract the RMSE of the model on the fitted data set. 
 % We now use the LiFE-BD structure and the fit to compute the error in each
 % white-matter voxel spanned by the tractography model.
-det_demean.rmse   = feGet(fe_det,'vox rmse');
+det_demeaned.rmse   = feGet(fe_det,'vox rmse');
 det_with_mean.rmse   = feGet(fe_det,'vox rmse with mean');
 
 %% (2.4) Extract the RMSE of the model on the second data set. 
 % Here we show how to compute the cross-valdiated RMSE of the tractography
 % model in each white-matter voxel. We store this information for later use
 % and to save computer memory.
-det_demean.rmsexv = feGetRep(fe_det,'vox rmse');
+det_demeaned.rmsexv = feGetRep(fe_det,'vox rmse');
 det_with_mean.rmsexv = feGetRep(fe_det,'vox rmse with mean');
 
 %% (2.5) Extract the Rrmse. 
 % We show how to extract the ratio between the model prediction error
 % (RMSE) and the test-retest reliability of the data.
-det_demean.rrmse  = feGetRep(fe_det,'vox rmse ratio');
+det_demeaned.rrmse  = feGetRep(fe_det,'vox rmse ratio');
 det_with_mean.rrmse  = feGetRep(fe_det,'vox rmse ratio with mean');
 
 %% (2.6) Extract the fitted weights for the fascicles. 
 % The following line shows how to extract the weight assigned to each
 % fascicle in the connectome.
-det_demean.w      = feGet(fe_det,'fiber weights');
+det_demeaned.w      = feGet(fe_det,'fiber weights');
 det_with_mean.w      = feGet(fe_det,'fiber weights with mean');
 
 %% (2.7) Plot a histogram of the RMSE. 
