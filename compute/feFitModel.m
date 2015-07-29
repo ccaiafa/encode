@@ -1,4 +1,4 @@
-function [fit, w, R2] = feFitModel(M,dSig,dSig_demeaned,S0,fitMethod)
+function [fit, w, R2] = feFitModel(M,dSig,dSig_demeaned,S0,fitMethod,Niter,preconditioner)
 % 
 % feFitModel() function in LiFE but restricted to the
 % 
@@ -58,14 +58,27 @@ release = version('-release');
 [nAtoms] = size(M.D_demean,2); %feGet(fe,'natoms');
 [Nvoxels] = size(M.Phi,2); %feGet(fe,'nvoxels');
 
+if strcmp(preconditioner,'preconditioner')
+    switch strcat(mycomputer,'_',release)
+        case {'GLNXA64_2015a','MACI64_2014b','MACI64_2015a'}
+            h = compute_diag_mex(M.Phi.subs(:,1), M.Phi.subs(:,3), M.Phi.vals, M.D_demean,nFibers);
+            vals = M.Phi.vals./h(M.Phi.subs(:,3));
+            M.Phi = sptensor(M.Phi.subs,vals,size(M.Phi));
+        otherwise
+            h = dot(M.MmatrixM,M.MmatrixM,1);
+            M.MmatrixM = M.MmatrixM*diag(h.^(-1));
+    end
+end
+
 switch fitMethod
    case {'bbnnls'}
     
     tic
     fprintf('\nLiFE: Computing least-square minimization with BBNNLS...\n')
     opt = solopt;
-    opt.maxit = 500;
-    opt.use_tolo = 1;
+    opt.maxit = Niter;
+    opt.use_tolo = 1; 
+    opt.tolg = 1e-4;
     
     switch strcat(mycomputer,'_',release)
         case {'GLNXA64_2015a'}
@@ -77,6 +90,11 @@ switch fitMethod
         sprintf('\n Starting using old version of LiFE...\n')
         out_data = bbnnls_OLD(M.MmatrixM,dSig_demeaned,zeros(nFibers,1),opt);
     end
+    
+    if strcmp(preconditioner,'preconditioner')
+        out_data.x = out_data.x./h;
+    end
+    
     fprintf('BBNNLS status: %s\nReason: %s\n',out_data.status,out_data.termReason);
     w = out_data.x;
     fprintf(' ...fit process completed in %2.3fminutes\n',toc/60)
