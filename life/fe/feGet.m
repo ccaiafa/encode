@@ -1505,8 +1505,7 @@ switch param
       % provides the indices of fibers that touch the same voxels where a
       % provided tract exists
       [inds, ~] = find(fe.life.M.Phi(:,:,varargin{1})); % find nnz entries of subtensor      
-      
-      % inds has a list of (i,j,k) positions of nnz entries. Since we are interested in
+           % inds has a list of (i,j,k) positions of nnz entries. Since we are interested in
       % locating voxels we need to look at the second column (j).
       voxel_ind = unique(inds(:,2)); 
       
@@ -1528,6 +1527,11 @@ switch param
         voxel_ind = unique(inds(:,2));  
         val = feGet(fe,'roicoords');
         val = val(voxel_ind,:);
+    case 'relativeerror'
+        dSig = feGet(fe,'dsigdemeaned');
+        dSig_pred = feGet(fe,'psigfiber');
+        val = norm(dSig - dSig_pred)/norm(dSig);
+        
  
   otherwise
     help('feGet')
