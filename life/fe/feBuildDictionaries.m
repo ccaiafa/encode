@@ -37,8 +37,8 @@ nBvecs       = feGet(fe,'nBvecs');
 bvecs        = feGet(fe,'bvecs');                      % bvecs
 bvals        = feGet(fe,'bvals');                      % bvals
 
-DictSig = zeros(nBvecs,Norient); % Initialize Signal Dictionary matrix
-%DictTensors = zeros(9,Norient); % Initialize Tensors Dictionary matrix
+DictSig = zeros(nBvecs,Norient); % Initialize Demeaned Signal Dictionary matrix
+DictFull = zeros(nBvecs,Norient); % Initialize Full Signal Dictionary matrix
 
 D = diag(fe.life.modelTensor); % diagonal matix with diffusivities
 
@@ -49,6 +49,7 @@ for j=1:Norient
     Q = Rot*D*Rot';
     %DictTensors(:,j) = Q(:);
     DictSig(:,j) = exp(- bvals .* diag(bvecs*Q*bvecs')); % Compute the signal contribution of a fiber in the kernel orientation divided S0
+    DictFull(:,j) = DictSig(:,j); % Full signal atom
     DictSig(:,j) = DictSig(:,j) - mean(DictSig(:,j)); % demeaned signal
 end
 
