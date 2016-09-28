@@ -53,6 +53,6 @@ for j=1:Norient
     DictSig(:,j) = DictSig(:,j) - mean(DictSig(:,j)); % demeaned signal
 end
 
-fe = feSet(fe,'dictionary parameters',{Nphi,Ntheta,orient,DictSig});
+fe = feSet(fe,'dictionary parameters',{Nphi,Ntheta,orient,DictSig,DictFull});
 
 end
