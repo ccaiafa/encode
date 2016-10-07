@@ -881,7 +881,8 @@ switch param
     % Measured signal in VOI, this is the raw signal. not demeaned
     %
     % dSig = feGet(fe,'dSig full')
-    val = fe.life.dSig;
+    %val = fe.life.dSig;
+    val = fe.life.diffusion_signal_img';
     % Return a subset of voxels
     if ~isempty(varargin)
       % voxelIndices     = feGet(fe,'voxelsindices',varargin);
@@ -1531,8 +1532,33 @@ switch param
         dSig = feGet(fe,'dsigdemeaned');
         dSig_pred = feGet(fe,'psigfiber');
         val = norm(dSig - dSig_pred)/norm(dSig);
+    case 'isotropicterm'
+        nTheta  = feGet(fe,'nbvecs');
+        nVoxels = feGet(fe,'nvoxels');
+        dSigFull = feGet(fe,'psig fiber full');
+        dSigFull = reshape(dSigFull,[nTheta, nVoxels]);
         
- 
+        dSigMeas = feGet(fe,'dsigmeasured');
+        val = mean(dSigMeas - dSigFull,1);
+        val = repmat(val,[nTheta,1]);
+        
+        
+        
+    case 'psigfiberfull'
+        nTheta  = feGet(fe,'nbvecs');
+        nVoxels = feGet(fe,'nvoxels');
+        val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictFull,feGet(fe,'fiber weights'),nTheta,nVoxels);
+
+    case 'predfull'
+        nTheta  = feGet(fe,'nbvecs');
+        nVoxels = feGet(fe,'nvoxels');
+%         I0 = feGet(fe,'isotropicterm');
+%         val = feGet(fe,'psig fiber full');
+%         val = reshape(val,[nTheta,nVoxels]);
+%         val = I0 + val;
+        val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
+        val = reshape(val,[nTheta, nVoxels]);    
+        val = val + repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1); %% add mean signal
   otherwise
     help('feGet')
     fprintf('[feGet] Unknown parameter << %s >>...\n',param);
