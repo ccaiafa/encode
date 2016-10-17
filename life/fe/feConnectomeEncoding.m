@@ -72,6 +72,12 @@ vals = vals./a(sub2ind([nVoxels,nFibers],vox,fib));
 
 Phi = sptensor(Phi.subs,vals,size(Phi));
 
+% Divide dSig by S0(v)
+% S0 = feGet(fe,'s0_img');
+% ind = find(S0==0);
+% S0(ind) = mean(S0);
+% fe.life.diffusion_signal_img = fe.life.diffusion_signal_img./repmat(S0,1,Ntheta);
+
 % The following multiplies every slice by the corresponding S0(voxel) value
 S0 = feGet(fe,'s0_img');
 vals = Phi.vals.*S0(Phi.subs(:,2));

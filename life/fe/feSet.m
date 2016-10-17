@@ -176,6 +176,8 @@ switch param
     fe.life.M.orient = val{3};
     fe.life.M.DictSig = val{4}; 
     fe.life.M.DictFull = val{5};
+    fe.life.M.DictMean = val{6};
+    fe.life.M.DictIso = val{7};
   case 'gradients'
     fe.life.fibers.grad = val{1};
     fe.life.fibers.Nelem = val{2};

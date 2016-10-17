@@ -104,10 +104,14 @@ while (cond==0) && (iter < Niter)
     Dn = Xn*theta;
     mu_n = mean(exp(-  b*(dot(Dn,Dn))));
     ln = log(mu_n + alpha*f);
+    while ~isreal(ln)
+        mu_n = -1.1*alpha*min(f);
+        ln = log(mu_n + alpha*f);
+    end
     %if ~isreal(ln)
     %    keyboard
     %end
-    if isreal(ln) && (sum((ln + b*(dot(Dn,Dn))').^2) < sum((l + b*(dot(D,D))').^2))
+    if (sum((ln + b*(dot(Dn,Dn))').^2) < sum((l + b*(dot(D,D))').^2))
         lambda = 0.1*lambda;
         x = xn;
         D = Dn;

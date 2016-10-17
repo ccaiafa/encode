@@ -1,4 +1,4 @@
-function [Phi, Dict, Qtensors, Atom_mean, Tensor_fit_error, Vox_per_atom] = feFitPhi_Dict(varargin)
+function [Phi, Dict, Vox_per_atom] = feFitPhi_Dict(varargin)
 M = varargin{1};
 w = varargin{2};
 dSig = varargin{3};
@@ -19,7 +19,7 @@ bvals = varargin{6};
 [nTheta] = size(M.DictSig,1);
 [nVoxels] = size(M.Phi,2); %feGet(fe,'nvoxels');
 
-Qtensors = zeros(nAtoms,1);
+Qtensors = {};
 Atom_mean = zeros(nAtoms,1);
 Tensor_fit_error = zeros(nAtoms,1);
 
@@ -47,17 +47,20 @@ for iter=1:Niter
             E = dSig - DB;
             cols = ind(pos,2);     
             E = E(:,cols);
-            [da,ba] = right_nn_svds(E);
+            [da,ba] = right_nn_svds(E, M.DictSig(:,a));
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %                      plot_atom(M.DictSig(:,a),bvecs,[1 0 0]);
-            %                      hold on
-            %                      %plot_atom(M.DictFull(:,a),bvecs,[0 1 0]);
-            %                      plot_atom(da,bvecs,[0 0 1]);
-            %                      title(['Nr of voxels=',num2str(length(ba))]);
-            %
-            %                      plot3([0,M.orient(1,a)],[0,M.orient(2,a)],[0,M.orient(3,a)],'Color','r','LineWidth',4)
-            %                      set(gca, 'DataAspectRatio',[1,1,1])
+%                                  plot_atom(M.DictSig(:,a),bvecs,[1 0 0]);
+%                                  hold on
+%                                  %plot_atom(M.DictFull(:,a),bvecs,[0 1 0]);
+%                                  plot_atom(da,bvecs,[0 0 1]);
+%                                  title(['Nr of voxels=',num2str(length(ba))]);
+%             
+%                                  plot3([0,M.orient(1,a)],[0,M.orient(2,a)],[0,M.orient(3,a)],'Color','r','LineWidth',4)
+%                                  set(gca, 'DataAspectRatio',[1,1,1])
+% plot(M.DictSig(:,a))
+% hold on
+% plot(da,'r')
             
             
             % Fit a demeaned tensor to the atom
@@ -85,13 +88,20 @@ for iter=1:Niter
             
             
             % Fit a demeaned tensor to the adapted atom
-            alpha = norm(da);
-            f = da/alpha;
-            
-            [ Qest, mu, error ] = Estimate_atom_tensor_demeaned( f, alpha, bvecs, bvals,'constrained');
-            Qtensors(a) = Qest;
-            Atom_mean(a) = mu;
-            Tensor_fit_error(a) = error;
+%             alpha = std(da);
+%             f = da/alpha;
+%             
+%             [Rot,~, ~] = svd(M.orient(:,a)); % Compute the eigen vectors of the kernel orientation
+%             Q0 = Rot*diag([1, 0.5, 0.2])*Rot';
+%             %[ Qest, mu, error ] = Estimate_atom_tensor_demeaned( f, alpha, bvecs, bvals,'unconstrained',Q0);
+%             [ Qest, ~ ] = NewRaph_Qa_demeaned_alpha_mu( bvecs', f, bvals(1), 100, Q0, alpha, 'unconstrained');
+%             mu = mean(exp(- bvals .* diag(bvecs*Qest*bvecs')));
+%             error = norm(alpha*f -  exp(- bvals .* diag(bvecs*Qest*bvecs')) + mean(exp(- bvals .* diag(bvecs*Qest*bvecs'))))/norm(alpha*f);
+%             
+%             
+%             Qtensors{a} = Qest;
+%             Atom_mean(a) = mu;
+%             Tensor_fit_error(a) = error;
             
             %disp(['Atom ',num2str(a),'/',num2str(nAtoms)])
             
@@ -174,8 +184,9 @@ end
 
 
 
-function [da,ba] = right_nn_svds(E)
+function [da,ba] = right_nn_svds(E,atom)
 tol = 1e-8;
+atom = atom/norm(atom);
 
 
 [u1,s1,v1] = svds(E,1);
@@ -194,6 +205,7 @@ while delta > tol && sum(ba)
     error = errorn;
 end
 error_pos = error;
+%error_pos = norm(atom - da);
 da_pos = da;
 ba_pos = ba;
 
@@ -212,15 +224,34 @@ while delta > tol && sum(ba)
     error = errorn;
 end
 error_neg = error;
+%error_neg = norm(atom - da);
 da_neg = da;
 ba_neg = ba;
 
 if error_pos < error_neg
     da = da_pos;
-    ba = ba_pos;
+    ba = ba_pos;    
 else
     da = da_neg;
     ba = ba_neg;
 end
 
+% if error_pos < 0.1*error_neg
+%     da = da_pos;
+%     ba = ba_pos;
+% else
+%     if error_neg < 0.1*error_pos
+%         da = da_neg;
+%         ba = ba_neg;
+%     else
+%         if atom'*da_pos/norm(da_pos) > atom'*da_neg/norm(da_neg)
+%             da = da_pos;
+%             ba = ba_pos;
+%         else
+%             da = da_neg;
+%             ba = ba_neg;
+%         end
+%     end
+% 
+% end
 end

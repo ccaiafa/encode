@@ -1,10 +1,11 @@
-function [ Qa, mu, error ] = Estimate_atom_tensor_demeaned( f, alpha, bvecs, bvals, type )
+function [ Qa, mu, error ] = Estimate_atom_tensor_demeaned( f, alpha, bvecs, bvals, type ,Q0)
 
 nTheta = size(bvecs,1);
 
 % Initialization
-sigma =0.5;
-Qa = randQa(sigma);
+%sigma =0.5;
+%Qa = randQa(sigma);
+Qa = Q0;
 signal = exp(- bvals .* diag(bvecs*Qa*bvecs'));
 mu = mean(signal);
 % while sum(alpha*f<=-mu)

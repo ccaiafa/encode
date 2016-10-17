@@ -1545,10 +1545,31 @@ switch param
         
         
     case 'psigfiberfull'
+        ind = varargin{1}; % indices of fibers to keep
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');
-        val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictFull,feGet(fe,'fiber weights'),nTheta,nVoxels);
-
+        nFibers = feGet(fe,'nfibers');
+        
+        w0 = feGet(fe,'fiber weights'); % original weights
+        wf = zeros(nFibers,1);
+        wf(ind) = w0(ind); % weights for fibers to keep
+        
+        wiso = w0;
+        wiso(ind) = 0;  % weights for fibers transformed to isotropic
+        
+        % Generate not demeaned fiber diffusion signals
+        NotDemeanSig = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictFull,wf,nTheta,nVoxels);
+        NotDemeanSig = reshape(NotDemeanSig,[nTheta, nVoxels]);
+        
+        % Mean Signal
+        IsoSig = repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1);
+        % Substract atoms means
+        IsoSig = IsoSig - reshape(M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictMean,wf,nTheta,nVoxels),[nTheta, nVoxels]);
+        % Add isotropic converted fibers
+        IsoSig = IsoSig + reshape(M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictIso,wiso,nTheta,nVoxels),[nTheta, nVoxels]);
+        val = IsoSig + NotDemeanSig;
+        
+        
     case 'predfull'
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');

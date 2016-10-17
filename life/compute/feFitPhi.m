@@ -3,7 +3,7 @@ M = varargin{1};
 w = varargin{2};
 dSig = varargin{3};
 fitMethod = varargin{4};
-Niter = varargin{5};
+%Niter = varargin{5};
 %preconditioner = varargin{5};
 
 
@@ -31,7 +31,9 @@ switch fitMethod
         %% Update B(a,v)
         %options = optimset('Display','final','TolFun',1e-8,'TolX',1e-4);  
         options = optimset('lsqnonneg');
+        h = waitbar(0,'Fitting voxels ...');
         for v=1:nVoxels
+            waitbar(v/nVoxels, h,['Fitting (',num2str(v),'/',num2str(nVoxels),') ...']);
             bv = B(:,v);
             if nnz(bv)
                 [ind, j, val] = find(bv);
@@ -42,24 +44,44 @@ switch fitMethod
                 %x(x==0) = eps;
                 bvn = sparse(ind,j,x,nAtoms,1);
                 
-                difbv = norm(bv-bvn)/norm(bv);
+                %difbv = norm(bv-bvn)/norm(bv);
                 B(ind,v) = x;
-                error_pre = norm(dSig(:,v) - M.DictSig*bv)/norm(dSig(:,v));
-                error = norm(dSig(:,v) - M.DictSig*bvn)/norm(dSig(:,v));
+                %error_pre = norm(dSig(:,v) - M.DictSig*bv)/norm(dSig(:,v));
+                %error = norm(dSig(:,v) - M.DictSig*bvn)/norm(dSig(:,v));
                 %error = sqrt(resnorm)/norm(dSig(:,v));
                 
                 %disp(['Voxel ',num2str(v),' Error Pre=',num2str(100*error_pre),'%'' Error Post=',num2str(100*error),'%',' iterations=',num2str(output.iterations),' dif bv=',num2str(difbv)])
             end
         end
+        close(h)
         
         %% Compute Phi compatible with B(a,v)
-        [sub, val] = find(M.Phi);
+%         [sub, val] = find(M.Phi);
+%         ind = sub2ind(size(B), sub(:,1), sub(:,2));
+%         b = B(:);
+%         newval = w(sub(:,3)).*b(ind);
+%         newval = newval/sum(w.^2);
+%         
+%         Phi = sptensor(sub, newval, size(M.Phi));
+        
+        %% Compute Phi compatible with B(a,v)
+        [sub, ~] = find(M.Phi);
         ind = sub2ind(size(B), sub(:,1), sub(:,2));
         b = B(:);
-        newval = w(sub(:,3)).*b(ind);
-        newval = newval/sum(w.^2);
+        
+        A = sptensor(sub, ones(size(sub,1),1), size(M.Phi));
+        A = ttv(A,w.^2,3);
+        [subA, val] = find(A);
+        A = sparse(subA(:,1),subA(:,2),val,nAtoms,nVoxels);
+        a = A(:);
+        div = a(ind);
+        [ind1,~,val] = find(div);
+        
+        newval = full(w(sub(:,3)).*b(ind));
+        newval(ind1) = newval(ind1)./val;
         
         Phi = sptensor(sub, newval, size(M.Phi));
+        
 
         
     otherwise
