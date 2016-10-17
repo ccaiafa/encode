@@ -10,7 +10,7 @@ One major application of the tensor encoding is the implementaion of the [Linear
 We provide demos to expain how to:
  (1) Load and encode diffusion-weighted data and tractography models of white matter fascicles, as well as perform multidimensional arrays operations. 
  (2) Build and optimize a Linear Fascicle Evaluation model. 
- (4) Perform neuronatomical segmentations, computational neuroanatomy operations and virtual lesions using the connectome encoding framework.
+ (3) Perform neuronatomical segmentations, computational neuroanatomy operations and virtual lesions using the connectome encoding framework.
  (4) Reproduce some fo the figures of article describing the method implemented in thsi toolbox: Caiafa and Pestilli, forthcoming.
 
 ## Application.
