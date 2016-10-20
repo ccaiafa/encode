@@ -1580,6 +1580,7 @@ switch param
         val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
         val = reshape(val,[nTheta, nVoxels]);    
         val = val + repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1); %% add mean signal
+
   otherwise
     help('feGet')
     fprintf('[feGet] Unknown parameter << %s >>...\n',param);

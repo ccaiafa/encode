@@ -236,6 +236,10 @@ else
     ba = ba_neg;
 end
 
+lambda = norm(da);
+da = da/lambda;
+ba = ba*lambda;
+
 % if error_pos < 0.1*error_neg
 %     da = da_pos;
 %     ba = ba_pos;
