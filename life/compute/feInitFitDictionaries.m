@@ -1,7 +1,6 @@
-function [Phi, Dict] = feFitPhi_Dictionaries(varargin)
+function [Phi, Dict] = feInitFitDictionaries(varargin)
 fe = varargin{1};
-Niter = varargin{2};
-lambda = varargin{3};
+lambda = varargin{2};
 
 
 % feFitPhi() function that given a fix vector of weights w optimize the tensor Phi
@@ -20,43 +19,22 @@ w = fe.life.fit.weights;
 
 dSig = reshape(feGet(fe,'dsigdemeaned'),[nTheta,nVoxels]);
 
-B = ttv(M.Phi,w,3);
+B = ttv(fe.life.M.Phi,w,3);
 [ind, val] = find(B);
 B = sparse(ind(:,1),ind(:,2),val,nAtoms,nVoxels);
 
-for iter=1:Niter
-    % Compute DB
-    DB = M.DictSig*B;
+ind_vox = 1:nVoxels;
+level = 1;
+epsilon = 0.3;
+while length(ind_vox) > 1000
+    [Dict, B(:,ind_vox)] = update(dSig, fe.life.M.DictSig, B(:,ind_vox), lambda);
+    e = sum((dSig - Dict*B(:,ind_vox)).^2,1)/sum(dSig.^2,1);
+    ind_voxA = find(e < epsilon); % indices to voxels with low error
+    fe.life.M.Dictionaries{level} = Dict;
+    fe.life.M.ind_vox{level} = ind_vox(ind_voxA);
+    ind_vox = find(e >= epsilon); %indices to voxels with high error need to be fitted with a new dictionary (next level)
+    dSig = dSig(:,ind_vox);
     
-    %% Update B(a,v) and Dict(theta,a)
-    %h = waitbar(0,'Adapting atoms ...');
-    for a=1:nAtoms
-        %waitbar(a/nAtoms, h,['Adapting atoms (',num2str(a),'/',num2str(nAtoms),') ...']);
-        
-        pos = find(ind(:,1)==a);
-        if ~isempty(pos)      
-            
-            DB = DB - M.DictSig(:,a)*B(a,:);
-            E = dSig - DB;
-            cols = ind(pos,2);     
-            E = E(:,cols);
-            [da,ba] = right_nn_svds(E, lambda);  
-            
-            % update Dict and B
-            M.DictSig(:,a) = da;
-            B(a,cols) = ba;           
-            
-            % uptdate DB
-            DB = DB + M.DictSig(:,a)*B(a,:);              
-
-            %error_post = norm(dSig-M.DictSig*B,'fro')/norm(dSig,'fro')
-        end
-        
-        %disp(['atom ',num2str(a),' of ',num2str(nAtoms)]);
-    end
-    %close(h)
-    
-    %disp(['Fit Dic and B, iter',num2str(iter),' error=',num2str(100*norm(dSig-M.DictSig*B,'fro')/norm(dSig,'fro'))])
 end
 
 %% Compute Phi compatible with B(a,v)
@@ -81,6 +59,41 @@ Dict = M.DictSig;
 
 end
 
+function [D, B] = update(dSig, D, B,lambda)
+% Compute DB
+DB = D*B;
+nAtoms = size(D,2);
+[ind1, ind2] = find(B);
+%% Update B(a,v) and Dict(theta,a)
+%h = waitbar(0,'Adapting atoms ...');
+for a=1:nAtoms
+    %waitbar(a/nAtoms, h,['Adapting atoms (',num2str(a),'/',num2str(nAtoms),') ...']);
+    pos = find(ind1==a);
+    if ~isempty(pos)
+        
+        DB = DB - D(:,a)*B(a,:);
+        E = dSig - DB;
+        cols = ind2(pos);
+        E = E(:,cols);
+        [da,ba] = right_nn_svds(E, lambda);
+        
+        % update Dict and B
+        D(:,a) = da;
+        B(a,cols) = ba;
+        
+        % uptdate DB
+        DB = DB + D(:,a)*B(a,:);
+        
+        error_post = norm(dSig-D*B,'fro')/norm(dSig,'fro')
+    end
+    
+    %disp(['atom ',num2str(a),' of ',num2str(nAtoms)]);
+end
+%close(h)
+
+%disp(['Fit Dic and B, iter',num2str(iter),' error=',num2str(100*norm(dSig-M.DictSig*B,'fro')/norm(dSig,'fro'))])
+
+end
 
 
 function [da,ba] = right_nn_svds(E,lambda)
