@@ -88,8 +88,10 @@ ni_sim.data = feReplaceImageValues(ni_sim.data,b0_data,coords_CST,b0indexes);
 ni_sim.data = feReplaceImageValues(ni_sim.data,pred_CST,coords_CST,indexes);
 
 % save nifti to disk
+dips('Writing prediction nifti to disk...')
 niftiWrite(ni_sim,ni_sim.fname);
 
+disp('Fitting tensor...')
 if ~exist(fullfile('DTI-FIT_test','dt6.mat'),'file')
 % Generate a NIFTI with FA from the NIFTI with data.
 [dt6FileName,pdd] = dtiRawFitTensorMex(ni_sim.fname, bvecs', bvals', ...
@@ -100,11 +102,21 @@ if ~exist(fullfile('DTI-FIT_test','dt6.mat'),'file')
                                        [], ...
                                        feGet(fe,'xform img2acpc'), ...
                                        true);
+else
+   dt6FileName = fullfile(pwd,'DTI-FIT_test','dt6.mat');
 end
 
 % Make a figure of the diffusion properties in the tract:
 % Extract the Tract from the full fiber group:
+disp('Generating the FA map profile for the tract...')
 fg      = feGet(fe,'fibers acpc');
 fgTract = fgExtract(fg, ind_tracts1, 'keep');
 dt      = dtiLoadDt6( dt6FileName );
 [fa, md, rd, ad, cl, SuperFiber] = dtiComputeDiffusionPropertiesAlongFG(fgTract,dt,[],[],100);
+
+figure('name','FA profile','color','w')
+plot(fa)
+
+figure('name','MD profile','color','w')
+plot(md)
+
