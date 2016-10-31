@@ -28,12 +28,20 @@ L = 360;
 
 % Recompute Dictionay adding isotropic and Full dictionaries
 fe.life.modelTensor = [1.5,0.1,0.1];
+%fe.life.modelTensor = [2.5,0.8,0.8];
+
 fe = feBuildDictionaries(fe,L,L);
 coords       = fe.roi.coords;
 
 %% Build new nifti file with simulated data - Arcuate/CST (pred_full)
 % load classification file
-tract1 = 3; % CST
+
+% Select tract to analyze
+%tract1 = 3;
+%tract_name = 'CST';
+keyboard
+tract1 = 15;
+tract_name = 'SLF';
 
 TractsFile = deblank(ls(char(fullfile(feStructurePath,strcat('fe_structure_*',subject,'*_STC_','*run01_500000*',alg,'*',param,'*',conn,'_TRACTS.mat')))));
 load(TractsFile);
@@ -92,18 +100,18 @@ dips('Writing prediction nifti to disk...')
 niftiWrite(ni_sim,ni_sim.fname);
 
 disp('Fitting tensor...')
-if ~exist(fullfile('DTI-FIT_test','dt6.mat'),'file')
+if ~exist(fullfile(sprintf('DTI_FIT_%s',tract_name),'dt6.mat'),'file')
 % Generate a NIFTI with FA from the NIFTI with data.
 [dt6FileName,pdd] = dtiRawFitTensorMex(ni_sim.fname, bvecs', bvals', ...
                                        [],  ...
-                                       500, ...
+                                       1, ...
                                        true, ...
                                        'ls', ...
                                        [], ...
                                        feGet(fe,'xform img2acpc'), ...
                                        true);
 else
-   dt6FileName = fullfile(pwd,'DTI-FIT_test','dt6.mat');
+   dt6FileName = fullfile(pwd,sprintf('DTI_FIT_%s',tract_name),'dt6.mat');
 end
 
 % Make a figure of the diffusion properties in the tract:
