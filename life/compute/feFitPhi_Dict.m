@@ -188,7 +188,8 @@ function [da,ba] = right_nn_svds(E,atom)
 tol = 1e-8;
 atom = atom/norm(atom);
 
-
+% E(isnan(E))=0;
+% E(isinf(E))=0;
 [u1,s1,v1] = svds(E,1);
 % try positive sing vectors
 da = u1;
@@ -199,7 +200,9 @@ delta = Inf;
 while delta > tol && sum(ba)
     ba = da'*E;
     ba(ba<0) = 0;
-    da = E*ba'/(ba*ba');
+    if sum(ba) 
+        da = E*ba'/(ba*ba');
+    end
     errorn = norm(E-da*ba,'fro');
     delta = abs(errorn - error);
     error = errorn;
@@ -218,7 +221,9 @@ delta = Inf;
 while delta > tol && sum(ba) 
     ba = da'*E;
     ba(ba<0) = 0;
-    da = E*ba'/(ba*ba');
+    if sum(ba) 
+        da = E*ba'/(ba*ba');
+    end
     errorn = norm(E-da*ba,'fro');
     delta = abs(errorn - error);
     error = errorn;
@@ -237,8 +242,10 @@ else
 end
 
 lambda = norm(da);
-da = da/lambda;
-ba = ba*lambda;
+if lambda
+    da = da/lambda;
+    ba = ba*lambda;
+end
 
 % if error_pos < 0.1*error_neg
 %     da = da_pos;
