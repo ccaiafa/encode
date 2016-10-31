@@ -1,4 +1,8 @@
 
+addpath(genpath('/N/dc2/projects/lifebid/code/vistasoft/'))
+addpath(genpath('/N/dc2/projects/lifebid/code/mba/'))
+addpath(genpath('/N/dc2/projects/lifebid/code/franpest/tract_predict/encode'))
+
 %% Load data from disk on DC2
 dataRootPath = '/N/dc2/projects/lifebid/2t1/HCP/';
 subject      = '105115';

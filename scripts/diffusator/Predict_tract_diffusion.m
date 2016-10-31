@@ -1,4 +1,8 @@
 
+addpath(genpath('/N/dc2/projects/lifebid/code/vistasoft/'))
+addpath(genpath('/N/dc2/projects/lifebid/code/mba/'))
+addpath(genpath('/N/dc2/projects/lifebid/code/franpest/tract_predict/encode'))
+
 %% Load data from disk on DC2
 dataRootPath = '/N/dc2/projects/lifebid/2t1/HCP/';
 subject      = '105115';
@@ -38,11 +42,11 @@ if length(ind)~=length(classification.index)
     error('WARNING!: nnz weights number does not match with the numer of fibers in the tracts')
 end
 
-ind_tracts1 = find(classification.index==tract1);
+ind_tracts1 = find(classification.index == tract1);
 % We clean all major tracs
 for iTract = [tract1]
     fprintf('\n Cleaning %s ...',classification.names{iTract})
-    [~, keep{iTract}] = mbaComputeFibersOutliers(fascicles(iTract),3,3);
+    [fg_CST, keep{iTract}] = mbaComputeFibersOutliers(fascicles(iTract),3,3);
 end
 ind_tracts1 = ind_tracts1(keep{tract1});
 nnz_ind     = find(feGet(fe,'fiber weights'));
@@ -56,7 +60,7 @@ disp(['Error predicting signal CST=',num2str(error_CST)]);
 
 % Compute coords for CST voxels
 [inds, ~]  = find(fe.life.M.Phi(:,:,ind_tracts1)); 
-voxind_CST =  unique(inds(:,2));
+voxind_CST = unique(inds(:,2));
 coords_CST = coords(voxind_CST,:);
 pred_CST   = pred_CST(:,voxind_CST);
 
@@ -86,9 +90,21 @@ ni_sim.data = feReplaceImageValues(ni_sim.data,pred_CST,coords_CST,indexes);
 % save nifti to disk
 niftiWrite(ni_sim,ni_sim.fname);
 
-% Extract the fiber group from the FE structure:
-fg_CST = feGet(fe,'fibers acpc');
-fg_CST = fgExtract(fg_CST,,'')
+if ~exist(fullfile('DTI-FIT_test','dt6.mat'),'file')
+% Generate a NIFTI with FA from the NIFTI with data.
+[dt6FileName,pdd] = dtiRawFitTensorMex(ni_sim.fname, bvecs', bvals', ...
+                                       [],  ...
+                                       500, ...
+                                       true, ...
+                                       'ls', ...
+                                       [], ...
+                                       feGet(fe,'xform img2acpc'), ...
+                                       true);
+end
 
 % Make a figure of the diffusion properties in the tract:
-SF = dtiComputeDiffusionPropertiesAlongFG(fg
+% Extract the Tract from the full fiber group:
+fg      = feGet(fe,'fibers acpc');
+fgTract = fgExtract(fg, ind_tracts1, 'keep');
+dt      = dtiLoadDt6( dt6FileName );
+[fa, md, rd, ad, cl, SuperFiber] = dtiComputeDiffusionPropertiesAlongFG(fgTract,dt,[],[],100);
