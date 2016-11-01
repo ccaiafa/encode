@@ -10,10 +10,11 @@ else % It there are adaptive dictionaries available, use them
     Phi = A.Phi;
     for n=1:nDict
         Phi_sub = Phi(:,A.ind_vox{n},:);
-        sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,A.Dictionaries{n},w,nTheta,length(fe.life.M.ind_vox{n}));
+        sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,A.Dictionaries{n},w,nTheta,length(A.ind_vox{n}));
         sub_val =  reshape(sub_val,[nTheta, length(A.ind_vox{n})]);
         b(:,A.ind_vox{n}) = sub_val;
     end
+    b = b(:);
 end
 
 

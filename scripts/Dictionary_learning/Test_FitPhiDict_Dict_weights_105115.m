@@ -52,13 +52,18 @@ fe.life.fit.weights = fe.life.fit.weights/normw;
 % Initialize Tensor model
 %fe = feSet(fe,'model tensor',[1.5 0.2 0.2]);
 
+lambda = 0;
+[fe ]= feInitFitDictionaries(fe,lambda);
+fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',100,'nopreconditioner',fe.life.fit.weights);
+fe = feSet(fe,'fit',fit);
+
+
 nTheta  = feGet(fe,'nbvecs');
 nVoxels = feGet(fe,'nvoxels');
 weights_old = fe.life.fit.weights;
 for iter=1:16
 %% Fix weights optimize Phi & Dict
-lambda = 0;
-[fe ]= feInitFitDictionaries(fe,lambda);
+[fe ]= feFitDictionaries(fe,lambda);
 % Adjust weights according to the mean diffusion signal per fascicle
 % A = ttv(Phi,ones(size(Phi,1),1),1); % sum over atoms
 % A = ttv(A, ones(size(A,1),1),1); % sum over voxels
@@ -91,13 +96,13 @@ rel_error = feGet(fe,'relative error');
 disp(['Iter=',num2str(iter),' Delta weights=',num2str(100*error_weights),'%',' rel error=',num2str(100*rel_error),'%',' error full=',num2str(100*error_full),'%']);
 disp(['nnz w=',num2str(nnz(fe.life.fit.weights)),' nnz Phi=',num2str(nnz(fe.life.M.Phi))])
 
-results{iter}.AdpDict = Dict;
+results{iter}.AdpDict = fe.life.M.Dictionaries;
 results{iter}.weights = fe.life.fit.weights;
 results{iter}.error_weights = error_weights;
 results{iter}.rel_errors = rel_error;
 results{iter}.error_full = error_full;
 
-fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',500,'nopreconditioner',fe.life.fit.weights);
+fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',100,'nopreconditioner',fe.life.fit.weights);
 fe = feSet(fe,'fit',fit);
 
 save('fe_structure_Dict_weights_105115_50iter_eps_lambda0.mat','fe','-v7.3');
