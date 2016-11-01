@@ -65,9 +65,9 @@ DB = D*B;
 nAtoms = size(D,2);
 [ind1, ind2] = find(B);
 %% Update B(a,v) and Dict(theta,a)
-%h = waitbar(0,'Adapting atoms ...');
+h = waitbar(0,'Adapting atoms ...');
 for a=1:nAtoms
-    %waitbar(a/nAtoms, h,['Adapting atoms (',num2str(a),'/',num2str(nAtoms),') ...']);
+    waitbar(a/nAtoms, h,['Adapting atoms (',num2str(a),'/',num2str(nAtoms),') ...']);
     pos = find(ind1==a);
     if ~isempty(pos)
         
@@ -84,12 +84,12 @@ for a=1:nAtoms
         % uptdate DB
         DB = DB + D(:,a)*B(a,:);
         
-        error_post = norm(dSig-D*B,'fro')/norm(dSig,'fro')
+        %error_post = norm(dSig-D*B,'fro')/norm(dSig,'fro')
     end
     
     %disp(['atom ',num2str(a),' of ',num2str(nAtoms)]);
 end
-%close(h)
+close(h)
 
 %disp(['Fit Dic and B, iter',num2str(iter),' error=',num2str(100*norm(dSig-M.DictSig*B,'fro')/norm(dSig,'fro'))])
 
