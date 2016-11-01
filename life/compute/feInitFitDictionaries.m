@@ -1,4 +1,4 @@
-function [Phi, Dict] = feInitFitDictionaries(varargin)
+function [fe] = feInitFitDictionaries(varargin)
 fe = varargin{1};
 lambda = varargin{2};
 
@@ -26,9 +26,9 @@ B = sparse(ind(:,1),ind(:,2),val,nAtoms,nVoxels);
 ind_vox = 1:nVoxels;
 level = 1;
 epsilon = 0.3;
-while length(ind_vox) > 1000
+while (length(ind_vox) > 1000) && level < 8
     [Dict, B(:,ind_vox)] = update(dSig, fe.life.M.DictSig, B(:,ind_vox), lambda);
-    e = sum((dSig - Dict*B(:,ind_vox)).^2,1)/sum(dSig.^2,1);
+    e = sum((dSig - Dict*B(:,ind_vox)).^2,1)./sum(dSig.^2,1);
     ind_voxA = find(e < epsilon); % indices to voxels with low error
     fe.life.M.Dictionaries{level} = Dict;
     fe.life.M.ind_vox{level} = ind_vox(ind_voxA);
@@ -38,11 +38,11 @@ while length(ind_vox) > 1000
 end
 
 %% Compute Phi compatible with B(a,v)
-[sub, ~] = find(M.Phi);
+[sub, ~] = find(fe.life.M.Phi);
 ind = sub2ind(size(B), sub(:,1), sub(:,2));
 b = B(:);
 
-A = sptensor(sub, ones(size(sub,1),1), size(M.Phi));
+A = sptensor(sub, ones(size(sub,1),1), size(fe.life.M.Phi));
 A = ttv(A,w.^2,3);
 [subA, val] = find(A);
 A = sparse(subA(:,1),subA(:,2),val,nAtoms,nVoxels);
@@ -53,9 +53,7 @@ div = a(ind);
 newval = full(w(sub(:,3)).*b(ind));
 newval(ind1) = newval(ind1)./val;
 
-Phi = sptensor(sub, newval, size(M.Phi));
-Dict = M.DictSig;
-
+fe.life.M.Phi = sptensor(sub, newval, size(fe.life.M.Phi));
 
 end
 

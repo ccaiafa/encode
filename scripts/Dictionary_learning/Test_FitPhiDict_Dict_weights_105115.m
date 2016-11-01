@@ -55,7 +55,7 @@ weights_old = fe.life.fit.weights;
 for iter=1:16
 %% Fix weights optimize Phi & Dict
 lambda = 0;
-[Phi, Dict ]= feInitFitDictionaries(fe,lambda);
+[fe ]= feInitFitDictionaries(fe,lambda);
 % Adjust weights according to the mean diffusion signal per fascicle
 % A = ttv(Phi,ones(size(Phi,1),1),1); % sum over atoms
 % A = ttv(A, ones(size(A,1),1),1); % sum over voxels
@@ -63,8 +63,8 @@ lambda = 0;
 % a = full(a)/(nTheta*nVoxels);
 % Phi = sptensor(Phi.subs, Phi.vals./a(Phi.subs(:,3)),size(Phi)); % Normalize tensor Phi
 
-fe = feSet(fe,'Indication Tensor',Phi);
-fe.life.M.DictSig = Dict;
+% fe = feSet(fe,'Indication Tensor',Phi);
+% fe.life.M.DictSig = Dict;
 
 %fe.life.M.AdpDict{iter} = Dict; 
 % fe.life.M.Qtensors{iter} = Qtensors; 
@@ -76,7 +76,7 @@ fe.life.M.DictSig = Dict;
 %fe.life.M.weights{iter} = fe.life.fit.weights;
 
 
-pred_full = feGet(fe,'predfull');
+pred_full = feGet(fe,'predfull'); %%%%%%%%% Cambiar!!!!!!
 meas_full = feGet(fe,'dsigmeasured');
 error_full =  norm(meas_full - pred_full,'fro')/norm(meas_full,'fro');
 
