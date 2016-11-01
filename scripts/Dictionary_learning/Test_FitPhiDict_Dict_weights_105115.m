@@ -1,25 +1,28 @@
-dataRootPath = '/N/dc2/projects/lifebid/2t1/HCP/';
-subject = '105115';
+%dataRootPath = '/N/dc2/projects/lifebid/2t1/HCP/';
+dataRootPath = '/Users/CesarMB13/Box Sync/demo_datasets/STN/';
+subject = 'FP';
 conn = 'NUM01'; % 
 param = 'lmax10'; % {'lmax10','lmax12','lmax2','lmax4','lmax6','lmax8', ''}
 alg = 'SD_PROB'; % {'SD_PROB', 'SD_STREAM','tensor'}
 
-vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
+%vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
+vista_soft_path = '/Users/CesarMB13/SOFT/vistasoft/';
 addpath(genpath(vista_soft_path));
 
-feStructurePath = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/Results/ETC_Dec2015/Single_TC/';
+%feStructurePath = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/Results/ETC_Dec2015/Single_TC/';
 
-encode_path = '/N/dc2/projects/lifebid/code/ccaiafa/encode/';
+%encode_path = '/N/dc2/projects/lifebid/code/ccaiafa/encode/';
+encode_path = '/Users/CesarMB13/SOFT/encode/';
 addpath(genpath(encode_path));
 
 % Generate fe_strucure
 %% Build the file names for the diffusion data, the anatomical MRI.
-dwiFile       = deblank(ls(fullfile(dataRootPath,subject,'diffusion_data','*b2000_aligned*.nii.gz')));
-dwiFileRepeat = deblank(ls(fullfile(dataRootPath,subject,'diffusion_data','*b2000_aligned*.nii.gz')));
-t1File        = deblank(fullfile(dataRootPath,subject,'anatomy',  'T1w_acpc_dc_restore_1p25.nii.gz'));
+dwiFile       = deblank(ls(fullfile(dataRootPath,strcat('sub-',subject),'dwi','run01_fliprot_aligned_trilin.nii.gz')));
+dwiFileRepeat = deblank(ls(fullfile(dataRootPath,strcat('sub-',subject),'dwi','run02_fliprot_aligned_trilin.nii.gz')));
+t1File        = deblank(fullfile(dataRootPath,strcat('sub-',subject),'anatomy',  't1.nii.gz'));
 
-fgFileName    = deblank(ls(fullfile(dataRootPath,subject,'fibers_new', strcat('*b2000*',char(param),'*',char(alg),'*',conn,'*','500000.tck'))));
-feFileName    = 'HCP105115test'; 
+fgFileName    = deblank(ls(fullfile(dataRootPath,strcat('sub-',subject),'tractography', 'run01_fliprot_aligned_trilin_csd_lmax10_wm_SD_PROB-NUM01-500000.tck')));
+feFileName    = 'STN_FP_test'; 
 
 L = 90; % Discretization parameter
 Niter = 500;
@@ -75,6 +78,8 @@ lambda = 0;
 % fe.life.fit.weights = fe.life.fit.weights.*a;
 %fe.life.M.weights{iter} = fe.life.fit.weights;
 
+
+load('fe_structure.mat')
 
 pred_full = feGet(fe,'predfull'); %%%%%%%%% Cambiar!!!!!!
 meas_full = feGet(fe,'dsigmeasured');

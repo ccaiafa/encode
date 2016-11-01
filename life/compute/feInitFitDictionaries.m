@@ -34,6 +34,7 @@ while (length(ind_vox) > 1000) && level < 8
     fe.life.M.ind_vox{level} = ind_vox(ind_voxA);
     ind_vox = find(e >= epsilon); %indices to voxels with high error need to be fitted with a new dictionary (next level)
     dSig = dSig(:,ind_vox);
+    level = level + 1;
     
 end
 

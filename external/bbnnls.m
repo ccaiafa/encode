@@ -131,7 +131,8 @@ function [step out] = computeBBStep(A, b, out)
     gp = find(out.x == 0 & out.grad > 0);
     out.oldg(gp) = 0;
 
-    Ag = M_times_w(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,out.oldg,nTheta,nVoxels);
+    Ag = M_times_w_pre(A,out.oldg);
+    %Ag = M_times_w(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,out.oldg,nTheta,nVoxels);
     %Ag = M_times_w(A,out.oldg); % A*oldg 
     
     % HINT: In my experience, the falling alternating steps perform better
@@ -142,8 +143,9 @@ function [step out] = computeBBStep(A, b, out)
         
         %Ag0 = Ag;
 %       Ag = A'*Ag;         
-       Ag = Mtransp_times_b(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]),nFibers); % MEX Intel compiler version
-        Ag(gp) = 0;
+       %Ag = Mtransp_times_b(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ag,[nTheta,nVoxels]),nFibers); % 
+       Ag = Mtransp_times_b_pre(A, reshape(Ag,[nTheta,nVoxels])); 
+       Ag(gp) = 0;
         step = numer / (Ag' * Ag);
     end
 end
@@ -157,13 +159,15 @@ function [f g] = funcGrad(A, b, x)
     [nVoxels] = size(A.Phi,2); %feGet(fe,'nvoxels');    
 
     %Ax = M_times_w(A,x) - b;
-    Ax = M_times_w(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,x,nTheta,nVoxels)- b;
+    %Ax = M_times_w(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,x,nTheta,nVoxels)- b;
+    Ax = M_times_w_pre(A,x) - b;
     
     f = 0.5*norm(Ax)^2;
     if (nargout > 1)
 %     g = A'*Ax;
 %     g =
-     g = Mtransp_times_b(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ax,[nTheta,nVoxels]),nFibers);% MEX Intel compiler version     
+     %g = Mtransp_times_b(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,reshape(Ax,[nTheta,nVoxels]),nFibers);
+     g = Mtransp_times_b_pre(A, reshape(Ax,[nTheta,nVoxels])); 
     end
 end
 

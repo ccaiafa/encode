@@ -1577,8 +1577,21 @@ switch param
 %         val = feGet(fe,'psig fiber full');
 %         val = reshape(val,[nTheta,nVoxels]);
 %         val = I0 + val;
-        val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
-        val = reshape(val,[nTheta, nVoxels]);    
+        if ~isfield(fe.life.M,'Dictionaries') % If there are not adaptive dictionaries available then use original dictionary
+            val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
+            val = reshape(val,[nTheta, nVoxels]);
+        else % It there are adaptive dictionaries available, use them
+            nDict = size(fe.life.M.Dictionaries,2);
+            val = zeros(nTheta, nVoxels);
+            Phi = fe.life.M.Phi;
+            for n=1:nDict
+                Phi_sub = Phi(:,fe.life.M.ind_vox{n},:);
+                sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.Dictionaries{n},feGet(fe,'fiber weights'),nTheta,length(fe.life.M.ind_vox{n}));
+                sub_val =  reshape(sub_val,[nTheta, length(fe.life.M.ind_vox{n})]);
+                val(:,fe.life.M.ind_vox{n}) = sub_val;
+            end
+        end
+        
         val = val + repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1); %% add mean signal
 
   otherwise
