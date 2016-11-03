@@ -1,18 +1,19 @@
 %dataRootPath = '/N/dc2/projects/lifebid/2t1/HCP/';
-dataRootPath = '/Users/CesarMB13/Box Sync/demo_datasets/STN/';
+%dataRootPath = '/Users/CesarMB13/Box Sync/demo_datasets/STN/';
+dataRootPath = '/N/dc2/projects/lifebid/code/ccaiafa/demo_datasets/STN/';
 subject = 'FP';
 conn = 'NUM01'; % 
 param = 'lmax10'; % {'lmax10','lmax12','lmax2','lmax4','lmax6','lmax8', ''}
 alg = 'SD_PROB'; % {'SD_PROB', 'SD_STREAM','tensor'}
 
-%vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
-vista_soft_path = '/Users/CesarMB13/SOFT/vistasoft/';
+vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
+%vista_soft_path = '/Users/CesarMB13/SOFT/vistasoft/';
 addpath(genpath(vista_soft_path));
 
 %feStructurePath = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/Results/ETC_Dec2015/Single_TC/';
 
-%encode_path = '/N/dc2/projects/lifebid/code/ccaiafa/encode/';
-encode_path = '/Users/CesarMB13/SOFT/encode/';
+encode_path = '/N/dc2/projects/lifebid/code/ccaiafa/encode/';
+%encode_path = '/Users/CesarMB13/SOFT/encode/';
 addpath(genpath(encode_path));
 
 % Generate fe_strucure
@@ -24,8 +25,8 @@ t1File        = deblank(fullfile(dataRootPath,strcat('sub-',subject),'anatomy', 
 fgFileName    = deblank(ls(fullfile(dataRootPath,strcat('sub-',subject),'tractography', 'run01_fliprot_aligned_trilin_csd_lmax10_wm_SD_PROB-NUM01-500000.tck')));
 feFileName    = 'STN_FP_test'; 
 
-L = 90; % Discretization parameter
-Niter = 500;
+L = 45; % Discretization parameter
+Niter = 50;
 %fe = feConnectomeInit(dwiFile,fgFileName,feFileName,[],dwiFile,t1File,L,[1.8,0.8]); % We set dwiFileRepeat =  run 01
 % fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',Niter,'nopreconditioner');
 % fe = feSet(fe,'fit',fit);
@@ -102,7 +103,7 @@ results{iter}.error_weights = error_weights;
 results{iter}.rel_errors = rel_error;
 results{iter}.error_full = error_full;
 
-fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',100,'nopreconditioner',fe.life.fit.weights);
+fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',Niter,'nopreconditioner',fe.life.fit.weights);
 fe = feSet(fe,'fit',fit);
 
 save('fe_structure_Dict_weights_FP.mat','fe','-v7.3');

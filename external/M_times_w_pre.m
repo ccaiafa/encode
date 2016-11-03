@@ -3,7 +3,7 @@ function b = M_times_w_pre(A,w)
 [nVoxels] = size(A.Phi,2);
 if ~isfield(A,'Dictionaries') % If there are not adaptive dictionaries available then use original dictionary
     b = M_times_w(A.Phi.subs(:,1),A.Phi.subs(:,2),A.Phi.subs(:,3),A.Phi.vals,A.DictSig,w,nTheta,nVoxels);
-    b = reshape(b,[nTheta, nVoxels]);
+    %b = reshape(b,[nTheta, nVoxels]);
 else % It there are adaptive dictionaries available, use them
     nDict = size(A.Dictionaries,2);
     b = zeros(nTheta, nVoxels);
