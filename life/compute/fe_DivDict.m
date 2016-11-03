@@ -10,11 +10,11 @@ lambda = varargin{3};
 
 [nAtoms] = feGet(fe,'natoms');
 [nTheta] = size(fe.life.M.DictSig,1);
-[nVoxels] = feGet(fe,'nvoxels');
 
 w = fe.life.fit.weights;
 
 ind_vox = fe.life.M.ind_vox{n};
+nVoxels = length(ind_vox);
 
 % restrict signal to voxels
 dSig = reshape(feGet(fe,'dsigdemeaned'),[nTheta,nVoxels]);
