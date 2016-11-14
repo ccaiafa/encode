@@ -121,8 +121,7 @@ while (~exit_cond)&& (nDict <= 8)
 %         error_full_old = error_full;
 %     else
 %         exit_cond = True;
-%         disp(['not improvement divid
-ing dictionary ', num2str(iter+1)])
+%         disp(['not improvement dividing dictionary ', num2str(iter+1)])
 %     end
     
     
