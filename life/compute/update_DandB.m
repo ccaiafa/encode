@@ -4,9 +4,9 @@ DB = D*B;
 nAtoms = size(D,2);
 [ind1, ind2] = find(B);
 %% Update B(a,v) and Dict(theta,a)
-h = waitbar(0,'Adapting atoms ...');
+%h = waitbar(0,'Adapting atoms ...');
 for a=1:nAtoms
-    waitbar(a/nAtoms, h,['Adapting atoms (',num2str(a),'/',num2str(nAtoms),') ...']);
+    %waitbar(a/nAtoms, h,['Adapting atoms (',num2str(a),'/',num2str(nAtoms),') ...']);
     pos = find(ind1==a);
     if ~isempty(pos)
         
@@ -28,7 +28,7 @@ for a=1:nAtoms
     
     %disp(['atom ',num2str(a),' of ',num2str(nAtoms)]);
 end
-close(h)
+%close(h)
 
 %disp(['Fit Dic and B, iter',num2str(iter),' error=',num2str(100*norm(dSig-M.DictSig*B,'fro')/norm(dSig,'fro'))])
 
@@ -38,7 +38,13 @@ end
 function [da,ba] = right_nn_svds(E,lambda)
 tol = 1e-4;
 
-[u1,s1,v1] = svds(E,1);
+%[u1,s1,v1] = svds(E,1);
+
+[U, S, V] = svd(E,'econ');
+u1 = U(:,1);
+v1 = V(:,1);
+s1 = S(1,1);
+
 % try positive sing vectors
 da = u1;
 ba = s1*v1;
