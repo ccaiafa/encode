@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=80:00:00
+#PBS -m ae
+#PBS -M ccaiafa@iu.edu
+#PBS -N single_split_32
+#PBS -V
+#PBS -o  /N/dc2/projects/lifebid/code/ccaiafa/encode/scripts/Dictionary_learning/Experiments/Results/Test_Hier_single_split_32.out
+
+#PBS -e  /N/dc2/projects/lifebid/code/ccaiafa/encode/scripts/Dictionary_learning/Experiments/Results/Test_Hier_single_split_32.err
+
+module load matlab
+cd /N/dc2/projects/lifebid/code/ccaiafa/encode/scripts/Dictionary_learning/Experiments/scripts/
+matlab -nodesktop -nosplash -r Test_Fit_MultiDict_Hierarchical_105115_single_split_32
