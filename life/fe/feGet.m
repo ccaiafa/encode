@@ -912,6 +912,32 @@ switch param
       val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
     end
     
+    case {'dsigdemeaned_div_s0'}
+        val = feGet(fe,'dsigdemeaned');
+        S0 = feGet(fe,'s0_img');
+        ind_zeros = S0==0;
+        val = reshape(val,[feGet(fe,'nbvals'), size(S0,1)]);
+        val = val./repmat(S0',feGet(fe,'nbvals'),1);
+        val(:,ind_zeros) = 0;
+        val = val(:);
+        
+        % Return a subset of voxels
+        if ~isempty(varargin)
+            % voxelIndices     = feGet(fe,'voxelsindices',varargin);
+            % voxelRowsToKeep  = feGet(fe,'voxel rows',voxelIndices);
+            % val           = val(voxelRowsToKeep,:);
+            val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
+        end
+        
+    case {'m_div_s0'}
+        M = fe.life.M;
+        S0 = feGet(fe,'s0_img');
+        ind_zeros = find(S0==0);
+        new_vals = M.Phi.vals./S0(M.Phi.subs(:,2));
+        new_vals(M.Phi.subs(:,2)==ind_zeros) = 0;
+        M.Phi = sptensor(M.Phi.subs,new_vals,size(M.Phi));
+        val = M;
+    
   case {'dsigrowssubset','diffusionsignaldemeanedinsubsetofrows'}
     % Get the demeaned signal for a subset of rows.
     % Useful for cross-validation.
@@ -1279,6 +1305,12 @@ switch param
     predicted = feGet(fe,'pSig f vox');
     val       = sqrt(mean((measured - predicted).^2,1));
     val       = val(feGet(fe,'voxelsindices',varargin));
+    
+   case {'voxrmsefull'}
+       pred_full = feGet(fe,'predfull');
+       meas_full = feGet(fe,'dsigmeasured');
+       val       = sqrt(mean((measured - predicted).^2,1));
+       val       = val(feGet(fe,'voxelsindices',varargin));
    
   case {'voxrmses0norm'}
       % A volume of RMSE normalized by the S0 value in each voxel.
@@ -1585,10 +1617,12 @@ switch param
             val = zeros(nTheta, nVoxels);
             Phi = fe.life.M.Phi;
             for n=1:nDict
-                Phi_sub = Phi(:,fe.life.M.ind_vox{n},:);
-                sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.Dictionaries{n},feGet(fe,'fiber weights'),nTheta,length(fe.life.M.ind_vox{n}));
-                sub_val =  reshape(sub_val,[nTheta, length(fe.life.M.ind_vox{n})]);
-                val(:,fe.life.M.ind_vox{n}) = sub_val;
+                if ~isempty(fe.life.M.ind_vox{n})
+                    Phi_sub = Phi(:,fe.life.M.ind_vox{n},:);
+                    sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.Dictionaries{n},feGet(fe,'fiber weights'),nTheta,length(fe.life.M.ind_vox{n}));
+                    sub_val =  reshape(sub_val,[nTheta, length(fe.life.M.ind_vox{n})]);
+                    val(:,fe.life.M.ind_vox{n}) = sub_val;
+                end
             end
         end
         

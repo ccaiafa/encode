@@ -38,8 +38,8 @@ end
 
 %% Divide Dictionary n into (n, n+1)
 Dict = fe.life.M.Dictionaries{n};
-e = sum((dSig - Dict*B).^2,1)./sum(dSig.^2,1);
-epsilon = median(e);
+e = nansum((dSig - Dict*B).^2,1)./nansum(dSig.^2,1);
+epsilon = nanmedian(e);
 ind_voxA = e < epsilon; % indices to voxels with low error
 
 %fe.life.M.Dictionaries{n} = Dict;

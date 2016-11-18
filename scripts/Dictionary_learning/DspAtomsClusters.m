@@ -4,7 +4,7 @@ function [] = DspAtomsClusters()
 load variables.mat
 
 
-Nprof = 3;
+Nprof = 2;
 Members = zeros(Nprof,1);
 [idx,C,sumd,Dout] = kmeans(Mcoeffs',Nprof);
 figure
@@ -37,16 +37,14 @@ end
 
 % fe_old = load('/N/dc2/projects/lifebid/code/ccaiafa/demo_datasets/HCP3T/sub-105115/fe_structures/fe_structure_105115_STC_run01_SD_PROB_lmax10_connNUM01.mat');
 % 
-% ind_fib = find(fe_old.fe.life.fit.weights);
+[vals, ind_fib] = sort(fe.life.fit.weights,'descend');
+ind_fib = ind_fib(1:10000);
+
 c = jet(Nprof);
 
 %[subs, vals] = find(fe.life.M.Phi);
 %Nfib = size(fe.life.M.Phi,3);
 %class_noce = zeros(Nprof, Nfib);
-
-
-
-
 nAtoms = size(fe.life.M.DictSig,2);    
 
 for prof=1:Nprof
@@ -61,7 +59,8 @@ hold on
         for n=1:nDict
             pos = position_at((position_at >= (n-1)*nAtoms + 1) & position_at <= n*nAtoms);
             pos = mod(pos,nAtoms);
-            subtensor = fe.life.M.Phi(pos, fe.life.M.ind_vox{n}, :);
+            pos(pos==0) = nAtoms;
+            subtensor = fe.life.M.Phi(pos, fe.life.M.ind_vox{n}, ind_fib);
             [subs, vals] = find(subtensor);
             if ~isempty(subs)
                 ind_vox_at = [ind_vox_at , fe.life.M.ind_vox{n}(unique(subs(:,2)))];
@@ -69,7 +68,7 @@ hold on
         end
         
         %class_node(prof,ind_fib) = length(ind_vox_at)/nnz(fe.life.M.Phi(:,:,ind_fib))
-        scatter3(fe.roi.coords(ind_vox_at,1), fe.roi.coords(ind_vox_at,2), fe.roi.coords(ind_vox_at,3), 25*ones(length(ind_vox_at),1), repmat(c(prof,:),length(ind_vox_at),1), '.')
+        scatter3(fe.roi.coords(ind_vox_at,1), fe.roi.coords(ind_vox_at,2), fe.roi.coords(ind_vox_at,3), 1*ones(length(ind_vox_at),1), repmat(c(prof,:),length(ind_vox_at),1), '.')
         view(3)
     %end
 end
