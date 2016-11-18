@@ -1309,7 +1309,7 @@ switch param
    case {'voxrmsefull'}
        pred_full = feGet(fe,'predfull');
        meas_full = feGet(fe,'dsigmeasured');
-       val       = sqrt(mean((measured - predicted).^2,1));
+       val       = sqrt(mean((meas_full - pred_full).^2,1));
        val       = val(feGet(fe,'voxelsindices',varargin));
    
   case {'voxrmses0norm'}
@@ -1602,7 +1602,7 @@ switch param
         val = IsoSig + NotDemeanSig;
         
         
-    case 'predfull'
+        case 'predfull'
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');
 %         I0 = feGet(fe,'isotropicterm');
@@ -1627,6 +1627,23 @@ switch param
         end
         
         val = val + repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1); %% add mean signal
+        
+    case 'keepdirections'
+        ind = varargin{1};
+        if ~isfield(fe.life.M,'Dictionaries') % If there are not adaptive dictionaries available then use original dictionary
+            fe.life.M.DictSig = fe.life.M.DictSig(ind,:);
+            fe.life.M.DictFull = fe.life.M.DictFull(ind,:);
+            fe.life.M.DictMean = fe.life.M.DictMean(ind,:);
+            fe.life.M.DictIso = fe.life.M.DictIso(ind,:);
+            fe.life.M.orient = fe.life.M.orient(ind,:);
+            
+        else
+            nDict = size(fe.life.M.Dictionaries,2);
+            for n=1:nDict
+                fe.life.M.Dictionaries{n} = fe.life.M.Dictionaries{n}(ind,:);
+            end
+        end
+        val = fe;
 
   otherwise
     help('feGet')
