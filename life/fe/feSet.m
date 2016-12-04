@@ -197,6 +197,16 @@ switch param
   case 'torsion'
     fe.fg.Tor = val{1};  
     fe.fg.Indication = val{2}; 
+  case 'subsampledirs'
+    fe.life.diffusion_signal_img = fe.life.diffusion_signal_img(:,val);
+    fe.life.bvecs = fe.life.bvecs(val,:);
+    fe.life.bvals = fe.life.bvals(val);
+    fe.life.bvecsindices = fe.life.bvecsindices(val);
+    fe.life.M.DictSig = fe.life.M.DictSig(val,:);
+    fe.life.M.DictFull = fe.life.M.DictFull(val,:);
+    fe.life.M.DictMean = fe.life.M.DictMean(val,:);
+    fe.life.M.DictIso = fe.life.M.DictIso(val,:);   
+    fe.life.M.Phi = fe.life.M.Phi(val,:,:);    
             
   otherwise
     error('Unknown parameter %s\n',param);
