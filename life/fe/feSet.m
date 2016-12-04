@@ -205,8 +205,7 @@ switch param
     fe.life.M.DictSig = fe.life.M.DictSig(val,:);
     fe.life.M.DictFull = fe.life.M.DictFull(val,:);
     fe.life.M.DictMean = fe.life.M.DictMean(val,:);
-    fe.life.M.DictIso = fe.life.M.DictIso(val,:);   
-    fe.life.M.Phi = fe.life.M.Phi(val,:,:);    
+    fe.life.M.DictIso = fe.life.M.DictIso(val,:);     
             
   otherwise
     error('Unknown parameter %s\n',param);
