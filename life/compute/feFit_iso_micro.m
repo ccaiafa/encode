@@ -7,9 +7,11 @@ function [fit] = feFit_iso_micro(M, w, bval, bvecs, S0, dSig)
 %% The following part allows fitting isotropic weight (w0) ad microstructure (Qa)
 
 % Compute signal contributed by fascicles (with mean)
-Sf = M_times_w_with_mean(M,w);
+%Sf = M_times_w_with_mean(M,w);
 nTheta = size(M.Dict,1);
 Nvoxels = size(M.Phi,2);
+Sf = M_times_w(M.Phi.subs(:,1),M.Phi.subs(:,2),M.Phi.subs(:,3),M.Phi.vals,M.Dict,w,nTheta,nVoxels);
+
 Sf = reshape(Sf,[nTheta,Nvoxels]);
 
 % Extract unique bval

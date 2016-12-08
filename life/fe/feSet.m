@@ -175,7 +175,7 @@ switch param
     fe.life.M.Ntheta = val{2};
     fe.life.M.orient = val{3};
     fe.life.M.Dict = val{4};   
-    fe.life.M.D_demean = val{5}; 
+    fe.life.M.DictSig = val{5}; 
   case 'gradients'
     fe.life.fibers.grad = val{1};
     fe.life.fibers.Nelem = val{2};
