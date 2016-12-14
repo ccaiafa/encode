@@ -197,6 +197,12 @@ switch param
   case 'torsion'
     fe.fg.Tor = val{1};  
     fe.fg.Indication = val{2}; 
+  case 'indxbvalues'
+      fe.life.bvalues_centers = val;
+      for n = 1:length(fe.life.bvalues_centers)
+          bval = fe.life.bvalues_centers(n);
+          fe.life.bvals_ind{n} = find(abs(fe.life.bvals - bval/1000) < 100/1000);
+      end
   case 'subsampledirs'
     fe.life.diffusion_signal_img = fe.life.diffusion_signal_img(:,val);
     fe.life.bvecs = fe.life.bvecs(val,:);

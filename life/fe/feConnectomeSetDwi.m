@@ -1,4 +1,4 @@
-function fe = feConnectomeSetDwi(fe,dwiFileName,isrepeat)
+function fe = feConnectomeSetDwi(fe,dwiFileName,bvalues_centers,isrepeat)
 % Set all the fields necessary to store the DWI measurements.
 %
 % This can be used for the dwi measurements use to build the model as well
@@ -41,6 +41,7 @@ fe  = feSet(fe, sprintf('diffusion bvals %s',tag), ...
             dwiGet(dwi, 'diffusion bvals'));
 fe  = feSet(fe, sprintf('bvecs indices %s',tag),   ...
             dwiGet(dwi, 'diffusionimagenums'));
+fe = feSet(fe,sprintf('indxbvalues %s',tag), bvalues_centers);
 
 % Extract the dwi signal at the coordinates of the connectome
 fe  = feSet(fe, sprintf('diffusion signal image %s',tag), ...
