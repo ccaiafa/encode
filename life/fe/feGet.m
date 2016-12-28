@@ -1636,7 +1636,19 @@ switch param
             end
         end
         
-        val = val + repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1); %% add mean signal
+        dsigmeas = feGet(fe,'dsigmeasured');
+        
+        if isfield(fe.life,'bvals_ind')
+            for n=1:length(fe.life.bvals_ind)
+                val(fe.life.bvals_ind{n},:) = val(fe.life.bvals_ind{n},:) + ...
+                    repmat(mean(dsigmeas(fe.life.bvals_ind{n},:), 1),...
+                    length(fe.life.bvals_ind{n}),1); %% add mean signal
+            end
+        else
+            val = val + repmat(mean(dsigmeas, 1),nTheta,1); %% add mean signal
+        end
+        %val = val(:);
+        
         
     case 'keepdirections'
         ind = varargin{1};

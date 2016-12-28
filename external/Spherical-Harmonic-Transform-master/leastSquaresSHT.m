@@ -1,4 +1,4 @@
-function [F_N, Y_N] = leastSquaresSHT(N, F, dirs, basisType, weights)
+function [F_N, Y_N, error] = leastSquaresSHT(N, F, dirs, basisType, weights)
 %LEASTSQUARESSHT Spherical harmonic transform of F using least-squares
 %
 %   N:  maximum order of transform
@@ -35,6 +35,7 @@ function [F_N, Y_N] = leastSquaresSHT(N, F, dirs, basisType, weights)
         % perform weighted least-squares transform
         F_N = (Y_N'*diag(weights)*Y_N) \ (Y_N'*diag(weights) * F);
     end        
-        
-
+     
+    error = norm(Y_N*F_N-F)/norm(F);
+    
 end
