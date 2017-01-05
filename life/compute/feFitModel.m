@@ -93,6 +93,7 @@ switch fitMethod
     opt.use_tolo = 1;
     opt.tolg = 1e-5;
     opt.verbose = 1;
+    opt.tolx = 0.01;
     
     out_data = bbnnls(M,dSig,w0,opt);
     

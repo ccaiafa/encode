@@ -68,7 +68,7 @@ function out = bbnnls(M, b, x0, opt)
     %% Begin the main algorithm
     if (opt.verbose)
        fprintf('Running: **** SBB-NNLS ****\n\n');
-       fprintf('Iter   \t     Obj\t\t  ||pg||_inf\t\t ||x-x*||\n');
+       fprintf('Iter   \t     Obj\t\t  ||pg||_inf\t\t ||x-x*||\n \t\t dx');
        fprintf('-------------------------------------------------------\n');
     end
 
@@ -78,7 +78,7 @@ function out = bbnnls(M, b, x0, opt)
         out.iter = out.iter + 1;
 
         % HINT: edit checkTermination to determine good criterion for yourself!
-        [termReason, out.pgTimes(out.iter)] = checkTermination(opt, out);
+        [termReason, out.pgTimes(out.iter), deltax] = checkTermination(opt, out);
         if (termReason > 0), break; end
 
         % HINT: computeBBStep is the one to implement most carefully
@@ -108,7 +108,7 @@ function out = bbnnls(M, b, x0, opt)
         % HINT: for debugging, to see how result develops if true x* is known
         if (opt.truex), out.trueError(out.iter) = norm(opt.xt-out.x); end
         if (opt.verbose)
-            fprintf('%04d\t %E\t%E\t%E\n', out.iter, out.obj, out.pgTimes(out.iter), out.trueError(out.iter)); 
+            fprintf('%04d\t %E\t%E\t%E \t%E \n', out.iter, out.obj, out.pgTimes(out.iter), out.trueError(out.iter), deltax); 
         end
     end % of while
 
@@ -175,7 +175,7 @@ end
 % the strictest is norm of pg
 % HINT: for speedup, use maybe just opt.tolo or some other criterion that
 % you like.
-function [v pg] = checkTermination(options, out)
+function [v, pg, deltax] = checkTermination(options, out)
     % pgnorm limit -- need to check this first of all
     gp = find( (out.x ~= 0 | out.grad < 0));
 
@@ -193,10 +193,12 @@ function [v pg] = checkTermination(options, out)
 
     % Now check if we are doing break by tolx
     if (options.use_tolx)
-        if (norm(out.x-out.oldx)/norm(out.oldx) < options.tolx)
+        deltax = norm(out.x-out.oldx)/norm(out.oldx);
+        if ( deltax < options.tolx)
             v = 2;
             return;
         end
+    else deltax = NaN;
     end
 
     % Are we doing break by tolo (tol obj val)

@@ -23,10 +23,22 @@ B = ttv(fe.life.M.Phi,w,3);
 [ind, val] = find(B);
 B = sparse(ind(:,1),ind(:,2),val,nAtoms,nVoxels);
 
+% Update dictionaries in parallel
 nDict = size(fe.life.M.Dictionaries,2);
 for n=1:nDict
-disp(['level=',num2str(n)])    
-[fe.life.M.Dictionaries{n}, B(:,fe.life.M.ind_vox{n})] = update_DandB(dSig(:, fe.life.M.ind_vox{n}), fe.life.M.Dictionaries{n}, B(:,fe.life.M.ind_vox{n}), lambda);    
+    dSignal{n} = dSig(:, fe.life.M.ind_vox{n});
+    D{n} = fe.life.M.Dictionaries{n};
+    Bmat{n} = B(:,fe.life.M.ind_vox{n});
+end
+
+parfor n=1:nDict
+disp(['Dict=',num2str(n)])    
+[D{n}, Bmat{n}] = update_DandB(dSignal{n}, D{n}, Bmat{n}, lambda);    
+end
+
+for n=1:nDict
+fe.life.M.Dictionaries{n} = D{n};
+B(:,fe.life.M.ind_vox{n}) = Bmat{n};
 end
 
 %% Compute Phi compatible with B(a,v)
