@@ -63,13 +63,14 @@ function out = bbnnls(M, b, x0, opt)
     [out.refobj, out.grad]   = fgx(out.x);
     out.oldg   = out.grad;
     out.refg   = out.oldg;
+    out.oldx   = out.x;
 
 
     %% Begin the main algorithm
     if (opt.verbose)
        fprintf('Running: **** SBB-NNLS ****\n\n');
-       fprintf('Iter   \t     Obj\t\t  ||pg||_inf\t\t ||x-x*||\n \t\t dx');
-       fprintf('-------------------------------------------------------\n');
+       fprintf('Iter   \t     Obj\t\t  ||pg||_inf\t\t ||x-x*|| \t\t dx \n');
+       fprintf('--------------------------------------------------------------------------\n');
     end
 
     objectives = zeros(opt.maxit,1);
@@ -192,7 +193,7 @@ function [v, pg, deltax] = checkTermination(options, out)
     end
 
     % Now check if we are doing break by tolx
-    if (options.use_tolx)
+    if (options.use_tolx && out.iter > 2)
         deltax = norm(out.x-out.oldx)/norm(out.oldx);
         if ( deltax < options.tolx)
             v = 2;
