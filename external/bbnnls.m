@@ -70,7 +70,7 @@ function out = bbnnls(M, b, x0, opt)
     if (opt.verbose)
        fprintf('Running: **** SBB-NNLS ****\n\n');
        fprintf('Iter   \t     Obj\t\t  ||pg||_inf\t\t ||x-x*|| \t\t dx \n');
-       fprintf('--------------------------------------------------------------------------\n');
+       fprintf('---------------------------------------------------------------------------------\n');
     end
 
     objectives = zeros(opt.maxit,1);

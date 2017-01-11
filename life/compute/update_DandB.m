@@ -27,7 +27,7 @@ for a=1:nAtoms
         %error_post = norm(dSig-D*B,'fro')/norm(dSig,'fro')
     end
     
-    disp(['atom ',num2str(a),' of ',num2str(nAtoms)]);
+    %disp(['atom ',num2str(a),' of ',num2str(nAtoms)]);
 end
 %close(h)
 

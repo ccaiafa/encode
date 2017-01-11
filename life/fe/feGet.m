@@ -967,8 +967,9 @@ switch param
     %val = feGet(fe,'Mfiber')*feGet(fe,'fiber weights');
     %val = M_times_w(feGet(fe,'Mfiber'),feGet(fe,'fiber weights'));
     nTheta  = feGet(fe,'nbvecs');
-    nVoxels = feGet(fe,'nvoxels');  
-    val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
+    nVoxels = feGet(fe,'nvoxels'); 
+    val = M_times_w_pre(fe.life.M,feGet(fe,'fiber weights'));
+    %val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
     
     if ~isempty(varargin)
       % voxelIndices     = feGet(fe,'voxelsindices',varargin);
@@ -1615,27 +1616,25 @@ switch param
         case 'predfull'
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');
-%         I0 = feGet(fe,'isotropicterm');
-%         val = feGet(fe,'psig fiber full');
-%         val = reshape(val,[nTheta,nVoxels]);
-%         val = I0 + val;
-        if ~isfield(fe.life.M,'Dictionaries') % If there are not adaptive dictionaries available then use original dictionary
-            val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
-            val = reshape(val,[nTheta, nVoxels]);
-        else % It there are adaptive dictionaries available, use them
-            nDict = size(fe.life.M.Dictionaries,2);
-            val = zeros(nTheta, nVoxels);
-            Phi = fe.life.M.Phi;
-            for n=1:nDict
-                if ~isempty(fe.life.M.ind_vox{n})
-                    Phi_sub = Phi(:,fe.life.M.ind_vox{n},:);
-                    sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.Dictionaries{n},feGet(fe,'fiber weights'),nTheta,length(fe.life.M.ind_vox{n}));
-                    sub_val =  reshape(sub_val,[nTheta, length(fe.life.M.ind_vox{n})]);
-                    val(:,fe.life.M.ind_vox{n}) = sub_val;
-                end
-            end
-        end
-        
+        b = M_times_w_pre(fe.life.M,feGet(fe,'fiber weights'));
+        val = reshape(b,[nTheta, nVoxels]);
+%         if ~isfield(fe.life.M,'Dictionaries') % If there are not adaptive dictionaries available then use original dictionary
+%             val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
+%             val = reshape(val,[nTheta, nVoxels]);
+%         else % It there are adaptive dictionaries available, use them
+%             nDict = size(fe.life.M.Dictionaries,2);
+%             val = zeros(nTheta, nVoxels);
+%             Phi = fe.life.M.Phi;
+%             for n=1:nDict
+%                 if ~isempty(fe.life.M.ind_vox{n})
+%                     Phi_sub = Phi(:,fe.life.M.ind_vox{n},:);
+%                     sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.Dictionaries{n},feGet(fe,'fiber weights'),nTheta,length(fe.life.M.ind_vox{n}));
+%                     sub_val =  reshape(sub_val,[nTheta, length(fe.life.M.ind_vox{n})]);
+%                     val(:,fe.life.M.ind_vox{n}) = sub_val;
+%                 end
+%             end
+%         end
+%         
         dsigmeas = feGet(fe,'dsigmeasured');
         
         if isfield(fe.life,'bvals_ind')

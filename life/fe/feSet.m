@@ -197,7 +197,7 @@ switch param
   case 'torsion'
     fe.fg.Tor = val{1};  
     fe.fg.Indication = val{2}; 
-  case 'indxbvalues'
+  case {'indxbvalues','indxbvaluesrepeat'}
       fe.life.bvalues_centers = val;
       for n = 1:length(fe.life.bvalues_centers)
           bval = fe.life.bvalues_centers(n);
@@ -211,7 +211,17 @@ switch param
     fe.life.M.DictSig = fe.life.M.DictSig(val,:);
     fe.life.M.DictFull = fe.life.M.DictFull(val,:);
     fe.life.M.DictMean = fe.life.M.DictMean(val,:);
-    fe.life.M.DictIso = fe.life.M.DictIso(val,:);     
+    fe.life.M.DictIso = fe.life.M.DictIso(val,:);   
+    
+    case 'tracts_info'
+        Ntracts = size(val.names,2);
+        for n=1:Ntracts
+            fe.life.M.tracts{n}.ind = find(val.index==n);
+            fe.life.M.tracts{n}.name = val.names{n};
+        end
+        fe.life.M.tracts{Ntracts+1}.ind = find(val.index==0);
+        fe.life.M.tracts{Ntracts+1}.name = 'not a tract';
+        
             
   otherwise
     error('Unknown parameter %s\n',param);
