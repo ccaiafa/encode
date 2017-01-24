@@ -222,9 +222,105 @@ switch param
         fe.life.M.tracts{Ntracts+1}.ind = find(val.index==0);
         fe.life.M.tracts{Ntracts+1}.name = 'not a tract';
         
+    case 'dict2sph'
+        aziElev2aziIncl = @(dirs) [dirs(:,1) pi/2-dirs(:,2)]; %convert dire from Matlab azimuth-elevetion to azimuth-inclination
+        
+        bvecs_sym = [fe.life.bvecs; -fe.life.bvecs];
+        bvals_sym = [fe.life.bvals; fe.life.bvals];
+        nDict = size(fe.life.M.Dictionaries,2);
+        [nTheta,nAtoms] = size(fe.life.M.DictSig);
+        Lmax = val;
+        %nHarm = (Lmax+1)*(Lmax+2)/2;
+        nHarm = (Lmax+1)^2;
+        for n=1:nDict
+            disp(['Dict=',num2str(n)]); 
+            SPHcoeffs = zeros(nHarm,nAtoms);
+            error_fit = zeros(1,nAtoms);
+            orient = fe.life.M.orient;
+            Dict = fe.life.M.Dictionaries{n};
+            parfor a=1:nAtoms
+                %disp([num2str(a),'/',num2str(nAtoms)]);
+                [Rot,~, ~] = svd(orient(:,a)); % Compute rotation to allign atoms
+                d = Dict(:,a);
+                d = [d; d]; % Make atom symmetric
+                [ Q{a}, mu, error_fit(a)] = Diff2Tensors( d, 50, bvecs_sym, bvals_sym); % Fit Tensor to Atom and compute its mean mu
+                d = d + mu;
+                d = 5*d/norm(d);
+                
+                % Compute orientation of tensor
+                [U,l] = eig(Q{a},'vector');
+                [l,ind1] = sort(l,'descend');
+                v = U(:,ind1(1));
+                
+                rho = abs(dot(orient(:,a),v));
+%                 title_text = ['  Dict ', num2str(n), '  Atom ', num2str(a), '  Corr=', num2str(rho), '  Error fit=',num2str(error_fit(a))];
+%                 disp(title_text)
+
+                ind_nnz = find(fe.life.fit.weights~=0);
+                atom_usage = nnz(fe.life.M.Phi(a,fe.life.M.ind_vox{n},ind_nnz));
+                
+                if (rho > 0.75) && (atom_usage > 0)
+                    bvecs_rot=bvecs_sym*Rot;
+                    [azi, elev, rho] = cart2sph(bvecs_rot(:,1),bvecs_rot(:,2),bvecs_rot(:,3));
+                    [points] = aziElev2aziIncl([azi, elev]);
+                    %SPHcoeffs(:,a) = leastSquaresSHTeven(Lmax, d, bvecs_sym*Rot, 'real', []);
+                    [SPHcoeffs(:,a), ~ , e]= leastSquaresSHT(Lmax, d, points, 'real');
+                else
+                    SPHcoeffs(:,a) = NaN(nHarm,1);
+                end
+
+            end
+            fe.life.M.SPHcoeffs{n} = SPHcoeffs;
+            fe.life.M.Qtensors{n} = Q;
+            fe.life.M.Qten_fit_error{n} = error_fit;
+        end
+        
+    case 'sph2fa_md'
+        bvecs_sym = [fe.life.bvecs; -fe.life.bvecs];
+        bvals_sym = [fe.life.bvals; fe.life.bvals];
+        nDict = size(fe.life.M.Dictionaries,2);
+        [nTheta,nAtoms] = size(fe.life.M.DictSig);
+        for n=1:nDict
+            disp(['Dict=',num2str(n)]); 
+            FAs = zeros(1,nAtoms);
+            MDs = zeros(1,nAtoms);
+            GFAs = zeros(1,nAtoms);
+            parfor a=1:nAtoms
+                s = sort(eigs(fe.life.M.Qtensors{n}{a}),'descend');
+                sm = mean(s);
+                % Compute FA and MD
+                FAs(a) = sqrt(1.5*((s(1)-sm)^2 + (s(2)-sm)^2 + (s(3)-sm)^2)/(s(1)^2 + s(2)^2 + s(3)^2));
+                MDs(a) = (s(1) + s(2) + s(3))/3; 
+            end
+            fe.life.M.FAs{n} = FAs;
+            fe.life.M.MDs{n} = MDs;
+        end
+        
             
   otherwise
     error('Unknown parameter %s\n',param);
 end
 
+end
+
+function [ Qmin, mu, error_min] = Diff2Tensors( d, nRuns, bvecs, bvals)
+alpha = norm(d);
+d = d/alpha;
+
+error_min = Inf;
+for r=1:nRuns
+    Q0 = randQa(1);
+    [ Qest, mu, error ] = Estimate_atom_tensor_demeaned( d, alpha, bvecs, bvals, 'unconstrained' ,Q0);
+    if error < error_min
+        error_min = error;
+        Qmin = Qest;
+    end
+end
+
+end
+
+function [Qa] = randQa(sigma)
+x = sigma*randn(6,1);
+X = [x(1), x(4), x(6); 0, x(2), x(5); 0, 0 ,x(3)];
+Qa =  X'*X;
 end
