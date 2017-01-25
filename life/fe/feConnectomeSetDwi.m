@@ -45,7 +45,7 @@ fe  = feSet(fe, sprintf('bvecs indices %s',tag),   ...
 % Extract the dwi signal at the coordinates of the connectome
 %fe  = feSet(fe, sprintf('diffusion signal image %s',tag), ...
 %            dwiGet(dwi, 'diffusion signal image',feGet(fe,'roi coords')) );
-feroicoords = fefgGet(fe.fg,'roi coords'); 
+feroicoords = fefgGet(fe.fg,'uniqueimagecoords');
 dsi = dwiGet(dwi, 'diffusion signal image',feroicoords);
 fe  = feSet(fe, sprintf('diffusion signal image %s',tag), dsi);
 
