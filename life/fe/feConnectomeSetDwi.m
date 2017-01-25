@@ -43,13 +43,19 @@ fe  = feSet(fe, sprintf('bvecs indices %s',tag),   ...
             dwiGet(dwi, 'diffusionimagenums'));
 
 % Extract the dwi signal at the coordinates of the connectome
-fe  = feSet(fe, sprintf('diffusion signal image %s',tag), ...
-            dwiGet(dwi, 'diffusion signal image',feGet(fe,'roi coords')) );
-          
+%fe  = feSet(fe, sprintf('diffusion signal image %s',tag), ...
+%            dwiGet(dwi, 'diffusion signal image',feGet(fe,'roi coords')) );
+feroicoords = fefgGet(fe.fg,'roi coords'); 
+dsi = dwiGet(dwi, 'diffusion signal image',feroicoords);
+fe  = feSet(fe, sprintf('diffusion signal image %s',tag), dsi);
+
+
 % Extract the non-diffusion direction signal at the coordinates of the
 % conenctome
-fe  = feSet(fe, sprintf('S0 image %s',tag), ...
-            dwiGet(dwi, 'S0 image',feGet(fe,'roi coords')));
+%fe  = feSet(fe, sprintf('S0 image %s',tag), ...
+%            dwiGet(dwi, 'S0 image',feGet(fe,'roi coords')));
+soimage = dwiGet(dwi, 'S0 image',feroicoords);
+fe  = feSet(fe, sprintf('S0 image %s',tag), soimage);
 
 if length(isrepeat)>1, keyboard;end
           

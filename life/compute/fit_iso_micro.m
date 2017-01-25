@@ -1,35 +1,38 @@
 function [w0, Qa] = fit_iso_micro(S0, b, D0, theta, S, S_f, rangewf, sumwf)
 %% Initialization
-Qa_ap = eye(3);
 
-Niter = 5000; 
+obj_tot = size(1,length(rangewf));
 
-eror_w0 = zeros(1,Niter);
-error_Qa = zeros(1,Niter);
-
-
-obj = size(1,length(rangewf));
-
-Qa_ap = cell(length(rangewf));
+Qa_ap = cell(length(rangewf),1);
 
 iter = 1;
 for w0_ap = rangewf
-    Qa_ap{iter} = eye(3);
     l = Compute_l(S,w0_ap,S0,b,D0,S_f,sumwf);
-    [Qa_ap{iter}] = Compute_Qa(theta, l, b, 100, 1, Qa_ap{iter});
-    obj(iter) = Compute_obj(S,S0,b,D0,S_f,sumwf,theta,Qa_ap{iter},w0_ap);
+    min_obj = Inf;
+    for trials=1:5
+        [Qa] = Compute_Qa(theta, l, b, 100, 1, randQa(0.1));
+        obj = Compute_obj(S,S0,b,D0,S_f,sumwf,theta,Qa,w0_ap);
+        if obj < min_obj
+            min_obj = obj;
+            Qa_ap{iter} = Qa;
+            obj_tot(iter) = obj;
+        end
+    end
     iter = iter + 1;
 end
 
-[val,ind] = min(obj);
+[val,~] = min(obj_tot);
+
+ind = find(obj_tot==val);
+ind = ind(end);
 
 w0 = rangewf(ind);
 Qa = Qa_ap{ind};
-
+% 
 % f1 = figure;
-% semilogy(rangewf,obj)
+% semilogy(rangewf,obj_tot)
 % hold on
-% plot(w0,obj(ind),'.r')
+% plot(w0,obj_tot(ind),'.r')
 % pause(0.1)
 % clear f1
 
@@ -37,8 +40,6 @@ end
 
 %%
 function [ l ] = Compute_l(S,w0,S0,b,D0,S_f,sumwf)
-
-Ntheta = size(S,1);
 
 S_iso = w0*S0*exp(-b*D0);
 
@@ -170,11 +171,14 @@ while (cond==0) && (iter < Niter)
     
     iter = iter + 1;
 end
-
- if nnz(eigs(Qa_ap)<=0)
-    disp('error: Qa_ap not positive definite')
+ 
+coeff = 1e-8;
+ while nnz(eigs(Qa_ap)<=0)
+    %disp(['note: Qa_ap not positive definite, trying coeff ',num2str(coeff)])
     %Qa_ap = eye(3);
-    Qa_ap = NaN;
+    Qa_ap = Qa_ap + coeff*eye(3);
+    %Qa_ap = NaN;
+    coeff = 2*coeff;
 end
 
 
@@ -199,6 +203,17 @@ for i=1:Ntheta
     obj(i) = S(i) - S_iso - S_f(i) - S_a;   
 end
 obj = sum(obj.^2);
+end
+
+function [Qa] = randQa(sigma)
+    x = sigma*randn(6,1);
+    X = [x(1), x(4), x(6); 0, x(2), x(5); 0, 0 ,x(3)];
+    Qa =  X'*X; 
+    while ~(all(eig(Qa) > 0))
+        x = sigma*randn(6,1);
+        X = [x(1), x(4), x(6); 0, x(2), x(5); 0, 0 ,x(3)];
+        Qa =  X'*X; 
+    end
 end
 
 

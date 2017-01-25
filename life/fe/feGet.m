@@ -881,7 +881,7 @@ switch param
     % Measured signal in VOI, this is the raw signal. not demeaned
     %
     % dSig = feGet(fe,'dSig full')
-    val = fe.life.dSig;
+    val = fe.life.diffusion_signal_img';
     % Return a subset of voxels
     if ~isempty(varargin)
       % voxelIndices     = feGet(fe,'voxelsindices',varargin);
@@ -939,6 +939,42 @@ switch param
       % val           = val(voxelRowsToKeep,:);
       val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
     end
+    
+    case {'prediso'}
+        nTheta  = feGet(fe,'nbvecs');
+        S0 = mean(fe.life.diffusion_S0_img,2);
+        D0 = 3; %[Alexander, 2001] water free isotropic diffusion
+        bvals = feGet(fe,'bvals');
+        val = fe.life.fit.w0.*S0.*exp(-bvals(1)*D0);
+        val = repmat(val',nTheta,1);
+        
+    case {'predfibersfull'}
+        nTheta  = feGet(fe,'nbvecs');
+        nVoxels = feGet(fe,'nvoxels');
+        w = feGet(fe,'fiber weights');
+        if ~isempty(varargin)
+            w0 = zeros(size(w));
+            w0(varargin{1}) = w(varargin{1}); % keep only entries of selected fibers
+            w = w0;
+        end
+        val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.Dict,w,nTheta,nVoxels);
+        val = reshape(val,[nTheta, nVoxels]);
+        
+    case {'predmicro'}
+        nTheta  = feGet(fe,'nbvecs');
+        nVoxels = feGet(fe,'nvoxels');
+        S0 = mean(fe.life.diffusion_S0_img,2);
+        bvals = feGet(fe,'bvals');
+        bvecs = feGet(fe,'bvecs');
+        signal = zeros(nTheta,nVoxels);
+        parfor v=1:nVoxels
+            signal(:,v) = exp(- bvals .* diag(bvecs*fe.life.fit.Qa{v}*bvecs'));
+        end
+        val = fe.life.fit.wa.*S0;
+        val = repmat(val',nTheta,1);  
+        val = val.*signal;
+
+        
     
   case {'uniquefibersindicesinroi'}
     % Find the unique fibers indices in the FE roi.

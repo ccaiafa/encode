@@ -19,7 +19,10 @@ bval = bval(1);
 
 % Compute sum of weights per voxel
 nFibers = size(M.Phi,3);
-A = sparse(M.Phi.subs(:,2),M.Phi.subs(:,3),ones(nnz(M.Phi),1),nVoxels,nFibers);
+vox_fib = [M.Phi.subs(:,2),M.Phi.subs(:,3)];
+vox_fib = unique(vox_fib,'rows');
+
+A = sparse(vox_fib(:,1),vox_fib(:,2),ones(size(vox_fib,1),1),nVoxels,nFibers);
 sumwf = A*w;
 sumwf(sumwf>1) = 1;
 
@@ -30,7 +33,7 @@ w0 = zeros(nVoxels,1);
 wa = zeros(nVoxels,1);
 Qa = cell(nVoxels,1);
 parfor v=1:nVoxels
-    rangewf = linspace(1e-9,1-sumwf(v)-1e-9,100);
+    rangewf = linspace(1e-9,1-sumwf(v)-1e-9,20);
     [w0(v), Qa{v}] = fit_iso_micro(S0(v), bval, D0, bvecs', dSig(:,v), Sf(:,v), rangewf, sumwf(v));
     wa(v) = 1 - w0(v) - sumwf(v);
     disp(['voxel ', num2str(v),'/',num2str(nVoxels)])   
