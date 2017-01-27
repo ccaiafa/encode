@@ -1642,23 +1642,7 @@ switch param
         nVoxels = feGet(fe,'nvoxels');
         b = M_times_w_pre(fe.life.M,feGet(fe,'fiber weights'));
         val = reshape(b,[nTheta, nVoxels]);
-%         if ~isfield(fe.life.M,'Dictionaries') % If there are not adaptive dictionaries available then use original dictionary
-%             val = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictSig,feGet(fe,'fiber weights'),nTheta,nVoxels);
-%             val = reshape(val,[nTheta, nVoxels]);
-%         else % It there are adaptive dictionaries available, use them
-%             nDict = size(fe.life.M.Dictionaries,2);
-%             val = zeros(nTheta, nVoxels);
-%             Phi = fe.life.M.Phi;
-%             for n=1:nDict
-%                 if ~isempty(fe.life.M.ind_vox{n})
-%                     Phi_sub = Phi(:,fe.life.M.ind_vox{n},:);
-%                     sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.Dictionaries{n},feGet(fe,'fiber weights'),nTheta,length(fe.life.M.ind_vox{n}));
-%                     sub_val =  reshape(sub_val,[nTheta, length(fe.life.M.ind_vox{n})]);
-%                     val(:,fe.life.M.ind_vox{n}) = sub_val;
-%                 end
-%             end
-%         end
-%         
+        
         dsigmeas = feGet(fe,'dsigmeasured');
         
         if isfield(fe.life,'bvals_ind')
@@ -1672,11 +1656,11 @@ switch param
         end
         %val = val(:);
         
-    case 'isotropic'
+    case 'prediso'
         nDict = size(fe.life.M.Dictionaries,2);
         nVox = feGet(fe,'nvoxels');
         Iso = feGet(fe,'meansignal'); % Iso = Imean - sum(wf*mu)
-        [nTheta,nAtoms] = size(fe.life.M.DictSig);
+        nTheta = size(fe.life.M.DictSig,1);
         w = feGet(fe,'fiber weights');
         for n=1:nDict
             ind_vox = fe.life.M.ind_vox{n};
@@ -1684,7 +1668,7 @@ switch param
             Iso(ind_vox) = Iso(ind_vox) - ...
                 M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.mus{n},w,nTheta,length(ind_vox));
         end
-        val = Iso;
+        val = repmat(Iso,1,nTheta)';
         
         
     case 'keepdirections'

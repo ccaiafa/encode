@@ -30,11 +30,11 @@ i = 1;
 error_out(i) = error_full;
 error_full_old = error_full;
 delta_error = Inf;
-while (delta_error > error_trhesholdSig) && (nDict <= nDictMax)
+while (delta_error > error_trhesholdSig) || (nDict <= nDictMax) % while NOT CONVERGED OR Max number of Dict not reached
     %%     
     iFit =1;
     delta_weights = Inf;
-    while (delta_weights > error_threshold_weights) && (delta_error > error_trhesholdSig) && (iFit <= Niter_loop)
+    while ((delta_weights > error_threshold_weights) || (delta_error > error_trhesholdSig)) && (iFit <= Niter_loop) % While NOT Converged AND Max Iteration not reached
 
         % fit weights
         fit = feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',Niter,'nopreconditioner',fe.life.fit.weights);
