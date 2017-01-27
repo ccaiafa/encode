@@ -236,6 +236,8 @@ switch param
             disp(['Dict=',num2str(n)]); 
             SPHcoeffs = zeros(nHarm,nAtoms);
             error_fit = zeros(1,nAtoms);
+            mus = zeros(1,nAtoms);
+            Dict_with_mean = zeros(size(fe.life.M.Dictionaries{n}));
             orient = fe.life.M.orient;
             Dict = fe.life.M.Dictionaries{n};
             parfor a=1:nAtoms
@@ -246,6 +248,12 @@ switch param
                 [ Q{a}, mu, error_fit(a)] = Diff2Tensors( d, 50, bvecs_sym, bvals_sym); % Fit Tensor to Atom and compute its mean mu
                 d = d + mu;
                 d = 5*d/norm(d);
+                
+                % save mean
+                mus(a) = mu;
+                
+                % save atom with mean
+                Dict_with_mean(:,a) = Dict(:,a) + mu;
                 
                 % Compute orientation of tensor
                 [U,l] = eig(Q{a},'vector');
@@ -273,6 +281,8 @@ switch param
             fe.life.M.SPHcoeffs{n} = SPHcoeffs;
             fe.life.M.Qtensors{n} = Q;
             fe.life.M.Qten_fit_error{n} = error_fit;
+            fe.life.M.mus{n} = mus;
+            fe.life.M.Dict_with_mean{n} = Dict_with_mean;
         end
         
     case 'sph2fa_md'

@@ -163,7 +163,7 @@ feFileName    = 'LiFE_build_model_demo_TENSOR_DET';
 % help('feBuildModel') in the MatLab prompt for more information.
 clear fe
 
-fe = feConnectomeInit(dwiFile,fgFileName,feFileName,[],dwiFileRepeat,t1File,L,[1,0]);
+fe = feConnectomeInit(dwiFile,fgFileName,feFileName,[],dwiFileRepeat,2000, t1File,L,[1,0]);
 
 %% (2.2) Fit the model. 
 % Hereafter we fit the forward model of tracrography using a least-squared
