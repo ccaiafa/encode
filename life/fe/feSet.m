@@ -306,16 +306,6 @@ switch param
             fe.life.M.MDs{n} = MDs;
         end
         
-    case 'isotropic'
-        nDict = size(fe.life.M.Dictionaries,2);
-        nVox = feGet(fe,'nvoxels');
-        Iso = zeros(nVox,1);
-        Imean = feGet
-        [nTheta,nAtoms] = size(fe.life.M.DictSig);
-        for n=1:nDict
-            
-        end
-        
             
   otherwise
     error('Unknown parameter %s\n',param);

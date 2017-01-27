@@ -1672,6 +1672,20 @@ switch param
         end
         %val = val(:);
         
+    case 'isotropic'
+        nDict = size(fe.life.M.Dictionaries,2);
+        nVox = feGet(fe,'nvoxels');
+        Iso = feGet(fe,'meansignal'); % Iso = Imean - sum(wf*mu)
+        [nTheta,nAtoms] = size(fe.life.M.DictSig);
+        w = feGet(fe,'fiber weights');
+        for n=1:nDict
+            ind_vox = fe.life.M.ind_vox{n};
+            Phi_sub = fe.life.M.Phi(:,ind_vox,:);
+            Iso(ind_vox) = Iso(ind_vox) - ...
+                M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.mus{n},w,nTheta,length(ind_vox));
+        end
+        val = Iso;
+        
         
     case 'keepdirections'
         ind = varargin{1};
