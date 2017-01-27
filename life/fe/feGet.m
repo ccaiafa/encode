@@ -922,6 +922,30 @@ switch param
       val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
     end
     
+    case {'meansignal'}
+        nVoxels = feGet(fe,'nVoxels');
+        nBvecs  = feGet(fe,'nBvecs');
+        nShells = 1;
+        if isfield(fe.life,'bvals_ind')
+            nShells = length(fe.life.bvals_ind);
+        end
+        dSig = fe.life.diffusion_signal_img;
+        val = zeros(nVoxels,nShells);
+        if isfield(fe.life,'bvals_ind')
+            for n=1:nShells
+                val(:,n) = mean(dSig(:,fe.life.bvals_ind{n}),2);
+            end
+        else
+            val     = mean(dSig,2);
+        end
+        % Return a subset of voxels
+        if ~isempty(varargin)
+            % voxelIndices     = feGet(fe,'voxelsindices',varargin);
+            % voxelRowsToKeep  = feGet(fe,'voxel rows',voxelIndices);
+            % val           = val(voxelRowsToKeep,:);
+            val = val(feGet(fe,'voxel rows',feGet(fe,'voxelsindices',varargin)));
+        end
+    
     case {'dsigdemeaned_div_s0'}
         val = feGet(fe,'dsigdemeaned');
         S0 = feGet(fe,'s0_img');
