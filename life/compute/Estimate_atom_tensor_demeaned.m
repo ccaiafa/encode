@@ -47,7 +47,7 @@ end
 
 
 error = error/norm(f);
-
+%mu = mu/alpha;
 
 end
 

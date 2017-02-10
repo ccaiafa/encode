@@ -240,17 +240,37 @@ switch param
             Dict_with_mean = zeros(size(fe.life.M.Dictionaries{n}));
             orient = fe.life.M.orient;
             Dict = fe.life.M.Dictionaries{n};
+            
+            error_model = zeros(1,nAtoms);
             parfor a=1:nAtoms
                 %disp([num2str(a),'/',num2str(nAtoms)]);
                 [Rot,~, ~] = svd(orient(:,a)); % Compute rotation to allign atoms
                 d = Dict(:,a);
                 d = [d; d]; % Make atom symmetric
                 [ Q{a}, mu, error_fit(a)] = Diff2Tensors( d, 50, bvecs_sym, bvals_sym); % Fit Tensor to Atom and compute its mean mu
+                
+                %% Testing
+                signal = exp(-fe.life.bvals .* diag(fe.life.bvecs*Q{a}*fe.life.bvecs'));
+                mu = mean(signal);
+                signal_demeaned = signal - mu;
+                norm_sig_dem = norm(signal_demeaned);
+                atom_est = signal_demeaned/norm_sig_dem;
+                error_model(a) = norm(Dict(:,a)-atom_est)/norm(Dict(:,a));
+                
+                mu = mu/norm_sig_dem;
+                
+                
+%                 mind = min(d);
+%                 mu = -mind;
+                
+                %%
+
                 d = d + mu;
                 d = 5*d/norm(d);
                 
                 % save mean
                 mus(a) = mu;
+                
                 
                 % save atom with mean
                 Dict_with_mean(:,a) = Dict(:,a) + mu;
@@ -283,6 +303,7 @@ switch param
             fe.life.M.Qten_fit_error{n} = error_fit;
             fe.life.M.mus{n} = mus;
             fe.life.M.Dict_with_mean{n} = Dict_with_mean;
+            fe.life.M.error_model{n} = error_model;
         end
         
     case 'sph2fa_md'
@@ -313,7 +334,7 @@ end
 
 end
 
-function [ Qmin, mu, error_min] = Diff2Tensors( d, nRuns, bvecs, bvals)
+function [ Qmin, mu_min, error_min] = Diff2Tensors( d, nRuns, bvecs, bvals)
 alpha = norm(d);
 d = d/alpha;
 
@@ -324,6 +345,7 @@ for r=1:nRuns
     if error < error_min
         error_min = error;
         Qmin = Qest;
+        mu_min = mu;
     end
 end
 

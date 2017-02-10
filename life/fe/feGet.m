@@ -1599,10 +1599,12 @@ switch param
         dSig = feGet(fe,'dsigdemeaned');
         dSig_pred = feGet(fe,'psigfiber');
         val = norm(dSig - dSig_pred)/norm(dSig);
+        
     case 'isotropicterm'
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');
-        dSigFull = feGet(fe,'psig fiber full');
+        %dSigFull = feGet(fe,'psig fiber full');
+       dSigFull = feGet(fe,'pred fibers full'); 
         dSigFull = reshape(dSigFull,[nTheta, nVoxels]);
         
         dSigMeas = feGet(fe,'dsigmeasured');
@@ -1611,33 +1613,65 @@ switch param
         
         
         
-    case 'psigfiberfull'
-        ind = varargin{1}; % indices of fibers to keep
+    %case 'psigfiberfull'
+    %    ind = varargin{1}; % indices of fibers to keep
+    %    nTheta  = feGet(fe,'nbvecs');
+%         nVoxels = feGet(fe,'nvoxels');
+%         nFibers = feGet(fe,'nfibers');
+%         
+%         w0 = feGet(fe,'fiber weights'); % original weights
+%         wf = zeros(nFibers,1);
+%         wf(ind) = w0(ind); % weights for fibers to keep
+%         
+%         wiso = w0;
+%         wiso(ind) = 0;  % weights for fibers transformed to isotropic
+%         
+%         % Generate not demeaned fiber diffusion signals
+%         NotDemeanSig = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictFull,wf,nTheta,nVoxels);
+%         NotDemeanSig = reshape(NotDemeanSig,[nTheta, nVoxels]);
+%         
+%         % Mean Signal
+%         IsoSig = repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1);
+%         % Substract atoms means
+%         IsoSig = IsoSig - reshape(M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictMean,wf,nTheta,nVoxels),[nTheta, nVoxels]);
+%         % Add isotropic converted fibers
+%         IsoSig = IsoSig + reshape(M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictIso,wiso,nTheta,nVoxels),[nTheta, nVoxels]);
+%         val = IsoSig + NotDemeanSig;
+
+    case 'fiberspred'     
+        all_weights = feGet(fe,'fiber weights'); % weights all tracts
+        
+        tract_weights = zeros(size(all_weights));
+        tract_weights(varargin{1}) = all_weights(varargin{1}); % tract weights
+        
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');
+        % Compute demeaned prediction
+        demeaned_sig = M_times_w_pre(fe.life.M,tract_weights);
+        demeaned_sig = reshape(demeaned_sig,[nTheta, nVoxels]);
+           
+        % Copute fiber x voxel indication matrix
         nFibers = feGet(fe,'nfibers');
+        i = fe.life.M.Phi.subs(:,3); % fibers
+        j = fe.life.M.Phi.subs(:,2); % voxels
+        A = sparse(i,j,all_weights(i),nFibers,nVoxels);
         
-        w0 = feGet(fe,'fiber weights'); % original weights
-        wf = zeros(nFibers,1);
-        wf(ind) = w0(ind); % weights for fibers to keep
+        % Compute coefficient alpha
+        alpha = sum(A(varargin{1},:),1)./sum(A,1);
         
-        wiso = w0;
-        wiso(ind) = 0;  % weights for fibers transformed to isotropic
+        %Compute mean signal associated to the tract
+%         I0 = mean(feGet(fe,'dsigmeasured'),1); % Mean signal
+%         I0 = repmat(I0.*alpha,nTheta,1);
+        I0 = mean(feGet(fe,'dsigmeasured'),1); % Mean signal
+        I0 = repmat(I0,nTheta,1);
         
-        % Generate not demeaned fiber diffusion signals
-        NotDemeanSig = M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictFull,wf,nTheta,nVoxels);
-        NotDemeanSig = reshape(NotDemeanSig,[nTheta, nVoxels]);
+        %I0 = -min(demeaned_sig,[],1);
+        %I0 = repmat(I0,nTheta,1);
         
-        % Mean Signal
-        IsoSig = repmat(mean(feGet(fe,'dsigmeasured'), 1),nTheta,1);
-        % Substract atoms means
-        IsoSig = IsoSig - reshape(M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictMean,wf,nTheta,nVoxels),[nTheta, nVoxels]);
-        % Add isotropic converted fibers
-        IsoSig = IsoSig + reshape(M_times_w(fe.life.M.Phi.subs(:,1),fe.life.M.Phi.subs(:,2),fe.life.M.Phi.subs(:,3),fe.life.M.Phi.vals,fe.life.M.DictIso,wiso,nTheta,nVoxels),[nTheta, nVoxels]);
-        val = IsoSig + NotDemeanSig;
-        
-        
-        case 'predfull'
+        % Compute total signal
+        val = I0 + demeaned_sig;
+         
+    case 'predfull'
         nTheta  = feGet(fe,'nbvecs');
         nVoxels = feGet(fe,'nvoxels');
         b = M_times_w_pre(fe.life.M,feGet(fe,'fiber weights'));
@@ -1659,16 +1693,36 @@ switch param
     case 'prediso'
         nDict = size(fe.life.M.Dictionaries,2);
         nVox = feGet(fe,'nvoxels');
-        Iso = feGet(fe,'meansignal'); % Iso = Imean - sum(wf*mu)
         nTheta = size(fe.life.M.DictSig,1);
+        Iso = repmat(feGet(fe,'meansignal')',nTheta,1); % Iso = Imean - sum(wf*mu)
+        
         w = feGet(fe,'fiber weights');
         for n=1:nDict
             ind_vox = fe.life.M.ind_vox{n};
             Phi_sub = fe.life.M.Phi(:,ind_vox,:);
-            Iso(ind_vox) = Iso(ind_vox) - ...
-                M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,fe.life.M.mus{n},w,nTheta,length(ind_vox));
+            Iso(:,ind_vox) = Iso(:,ind_vox) - ...
+                reshape(M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,repmat(fe.life.M.mus{n},nTheta,1),w,nTheta,length(ind_vox)),...
+                nTheta,length(ind_vox));
         end
-        val = repmat(Iso,1,nTheta)';
+        val = Iso;
+        
+    case 'predfibersfull'                
+        nTheta  = feGet(fe,'nbvecs');
+        nVoxels = feGet(fe,'nvoxels');
+        nFibers = feGet(fe,'nfibers');
+        A = fe.life.M;
+        A.Dictionaries = fe.life.M.Dict_with_mean;
+        w1 = feGet(fe,'fiber weights');
+        
+        if isempty(varargin)
+            w = w1;
+        else
+            w = zeros(nFibers,1);
+            w(varargin{1}) = w1(varargin{1});
+        end
+              
+        b = M_times_w_pre(A,w);
+        val = reshape(b,[nTheta, nVoxels]);
         
         
     case 'keepdirections'
