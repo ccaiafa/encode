@@ -209,7 +209,7 @@ function [Qa] = randQa(sigma)
     x = sigma*randn(6,1);
     X = [x(1), x(4), x(6); 0, x(2), x(5); 0, 0 ,x(3)];
     Qa =  X'*X; 
-    while ~(all(eig(Qa) > 0))
+    while ~(all(eig(Qa) > 1e-4))
         x = sigma*randn(6,1);
         X = [x(1), x(4), x(6); 0, x(2), x(5); 0, 0 ,x(3)];
         Qa =  X'*X; 
