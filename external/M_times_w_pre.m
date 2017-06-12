@@ -22,8 +22,12 @@ else
     Phi = A.Phi;
     for n=1:nDict
         Phi_sub = Phi(:,A.ind_vox{n},:);
-        sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,A.Dictionaries{n},w,nTheta,length(A.ind_vox{n}));
-        sub_val =  reshape(sub_val,[nTheta, length(A.ind_vox{n})]);
+        if nnz(Phi_sub)
+            sub_val = M_times_w(Phi_sub.subs(:,1),Phi_sub.subs(:,2),Phi_sub.subs(:,3),Phi_sub.vals,A.Dictionaries{n},w,nTheta,length(A.ind_vox{n}));
+            sub_val =  reshape(sub_val,[nTheta, length(A.ind_vox{n})]);
+        else
+            sub_val = zeros(nTheta, length(A.ind_vox{n}));
+        end
         b(:,A.ind_vox{n}) = sub_val;
     end
     b = b(:);

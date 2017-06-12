@@ -1,4 +1,4 @@
-function h_ax = plotSphFunctionCoeffs(F_N, basisType, aziRes, polarRes, realComplex, h_ax)
+function h_ax = plotSphFunctionCoeffs(F_N, basisType, aziRes, polarRes, realComplex, h_ax, c)
 %PLOTSPHFUNCTIONGRID Plots a spherical function defined on a grid
 %
 %   F_N:  (N+1)^2 vector of SH coefficients
@@ -78,7 +78,8 @@ if isequal(realComplex, 'real')
     Hp = surf(Dp_x, Dp_y, Dp_z);
     Hn = surf(Dn_x, Dn_y, Dn_z);
     %set(Hp, 'FaceColor', 'b')
-    set(Hp, 'FaceColor', [0.9976, 0.7778, 0.2042])
+    %set(Hp, 'FaceColor', [0.9976, 0.7778, 0.2042])
+    set(Hp, 'FaceColor', c)
     set(Hp, 'EdgeAlpha', 0)
     set(Hn, 'FaceColor', 'r')
     set(Hn, 'EdgeAlpha', 0)

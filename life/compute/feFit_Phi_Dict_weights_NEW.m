@@ -1,4 +1,4 @@
-function [ fe, error_out ] = feFit_Phi_Dict_weights_NEW( fe, error_trhesholdSig, error_threshold_weights, nDictMax, Niter, Niter_loop, varargin)
+function [ fe, error_out ] = feFit_Phi_Dict_weights_NEW( fe, error_trhesholdSig, error_threshold_weights, nDictMax, Niter, Niter_loop, Nitermax, varargin)
 
 lambda = 0; % Parameter that control l2 regularization (maybe will be eliminated in the future)
 
@@ -30,7 +30,7 @@ i = 1;
 error_out(i) = error_full;
 error_full_old = error_full;
 delta_error = Inf;
-while (delta_error > error_trhesholdSig) || (nDict <= nDictMax) % while NOT CONVERGED OR Max number of Dict not reached
+while ((delta_error > error_trhesholdSig) || (nDict <= nDictMax)) &&  (i < Nitermax) % while NOT CONVERGED OR Max number of Dict not reached
     %%     
     iFit =1;
     delta_weights = Inf;
@@ -68,6 +68,13 @@ while (delta_error > error_trhesholdSig) || (nDict <= nDictMax) % while NOT CONV
         end
     end
     
+    % Save fe structure before doubling nDict
+    if ~isempty('varargin')
+        dataOutputPath = varargin{1};
+        name = varargin{2};
+        save(fullfile(dataOutputPath,sprintf('fe_struct_%s_nDicts%s.mat',name,num2str(nDict))), 'fe','error_out','-v7.3')
+    end
+
     % Try to divide last dictionary. To be modified to test all possible
     % Dictionary split and chose the one that fives better fit.
     
@@ -85,11 +92,6 @@ while (delta_error > error_trhesholdSig) || (nDict <= nDictMax) % while NOT CONV
         delta_error = Inf;      
     end
     
-    if ~isempty('varargin')
-        dataOutputPath = varargin{1};
-        name = varargin{2};
-        save(fullfile(dataOutputPath,sprintf('fe_struct_%s_nDicts%s.mat',name,num2str(nDict))), 'fe','error_out','-v7.3')
-    end
 
 end
 end

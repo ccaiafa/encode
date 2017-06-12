@@ -30,7 +30,7 @@ fe = feSet(fe,'savedir',savedir);
 tempNi = niftiRead(dwiFile);
 fe = feSet(fe, 'img2acpc xform', tempNi.qto_xyz);
 fe = feSet(fe, 'acpc2img xform', inv(tempNi.qto_xyz));
-clear tempNi
+clear tempN
 
 % Set up the fe name
 if isstruct(fgFileName),  n  = fgFileName.name;

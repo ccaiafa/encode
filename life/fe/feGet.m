@@ -1658,18 +1658,26 @@ switch param
         
         % Compute coefficient alpha
         alpha = sum(A(varargin{1},:),1)./sum(A,1);
+        alpha(isnan(alpha)) = 0;
         
         %Compute mean signal associated to the tract
-%         I0 = mean(feGet(fe,'dsigmeasured'),1); % Mean signal
-%         I0 = repmat(I0.*alpha,nTheta,1);
-        I0 = mean(feGet(fe,'dsigmeasured'),1); % Mean signal
-        I0 = repmat(I0,nTheta,1);
+         I0 = mean(feGet(fe,'dsigmeasured'),1); % Mean signal
+         I0 = repmat(I0.*alpha,nTheta,1);
+        %I0 = mean(feGet(fe,'dsigmeasured'),1); % Mean signal
+        %I0 = repmat(I0,nTheta,1);
         
         %I0 = -min(demeaned_sig,[],1);
         %I0 = repmat(I0,nTheta,1);
         
         % Compute total signal
+        if size(varargin,2) == 1
         val = I0 + demeaned_sig;
+        val(val<=0) = 0;
+        else % demeaned case
+            val = demeaned_sig;
+        end
+            
+        
          
     case 'predfull'
         nTheta  = feGet(fe,'nbvecs');
@@ -1677,18 +1685,20 @@ switch param
         b = M_times_w_pre(fe.life.M,feGet(fe,'fiber weights'));
         val = reshape(b,[nTheta, nVoxels]);
         
-        dsigmeas = feGet(fe,'dsigmeasured');
-        
-        if isfield(fe.life,'bvals_ind')
-            for n=1:length(fe.life.bvals_ind)
-                val(fe.life.bvals_ind{n},:) = val(fe.life.bvals_ind{n},:) + ...
-                    repmat(mean(dsigmeas(fe.life.bvals_ind{n},:), 1),...
-                    length(fe.life.bvals_ind{n}),1); %% add mean signal
+        if isempty(varargin)
+            dsigmeas = feGet(fe,'dsigmeasured');
+            
+            if isfield(fe.life,'bvals_ind')
+                for n=1:length(fe.life.bvals_ind)
+                    val(fe.life.bvals_ind{n},:) = val(fe.life.bvals_ind{n},:) + ...
+                        repmat(mean(dsigmeas(fe.life.bvals_ind{n},:), 1),...
+                        length(fe.life.bvals_ind{n}),1); %% add mean signal
+                end
+            else
+                val = val + repmat(mean(dsigmeas, 1),nTheta,1); %% add mean signal
             end
-        else
-            val = val + repmat(mean(dsigmeas, 1),nTheta,1); %% add mean signal
         end
-        %val = val(:);
+        
         
     case 'prediso'
         nDict = size(fe.life.M.Dictionaries,2);

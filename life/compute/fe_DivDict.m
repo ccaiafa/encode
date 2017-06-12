@@ -25,9 +25,14 @@ dSig = dSig(:,ind_vox);
 Phi = fe.life.M.Phi;
 Phi = Phi(:,ind_vox,:);
 
-B = ttv(Phi,w,3);
-[ind, val] = find(B);
-B = sparse(ind(:,1),ind(:,2),val,nAtoms,nVoxels_red);
+if nnz(Phi)
+    B = ttv(Phi,w,3);
+    [ind, val] = find(B);
+    B = sparse(ind(:,1),ind(:,2),val,nAtoms,nVoxels_red);
+else
+    B = sparse(nAtoms,nVoxels_red);
+end
+
 
 % Free space for extra dictionary
 nDict = size(fe.life.M.Dictionaries,2);
@@ -39,13 +44,17 @@ end
 %% Divide Dictionary n into (n, n+1)
 Dict = fe.life.M.Dictionaries{n};
 e = nansum((dSig - Dict*B).^2,1)./nansum(dSig.^2,1);
-epsilon = nanmedian(e);
-ind_voxA = e < epsilon; % indices to voxels with low error
+[es,is] = sort(e);
+ind_voxA = is(1:round(length(is)/2));
+
+%epsilon = nanmedian(e);
+%ind_voxA = e < epsilon; % indices to voxels with low error
 
 %fe.life.M.Dictionaries{n} = Dict;
 fe.life.M.ind_vox{n} = ind_vox(ind_voxA);
 
-ind_voxB = e >= epsilon; %indices to voxels with high error need to be fitted with a new dictionary (next level)
+ind_voxB = is(round(length(is)/2)+1:end);
+%ind_voxB = e >= epsilon; %indices to voxels with high error need to be fitted with a new dictionary (next level)
 fe.life.M.Dictionaries{n+1} = Dict;
 fe.life.M.ind_vox{n+1} = ind_vox(ind_voxB);
 
